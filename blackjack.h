@@ -327,6 +327,9 @@ public:
     // dealer up cards, for the given blackjack shoe, rule variations, and
     // playing strategy.  Only undealt cards in the shoe are considered;
     // progress.indicate() is called repeatedly during execution.
+    //
+    // WARNING: The given BJStrategy object must exist for the lifetime of this
+    // BJPlayer object, and is used in calls to getOption(...) below.
     BJPlayer(const BJShoe & shoe, BJRules & rules, BJStrategy & strategy,
              BJProgress & progress);
     void reset(const BJShoe & shoe, BJRules & rules, BJStrategy & strategy,
@@ -367,6 +370,7 @@ public:
                   bool surrender);
 
 protected:
+    BJStrategy *pStrategy;
     int numHands,
         playerHandCount[22][2];
     struct PlayerHand {

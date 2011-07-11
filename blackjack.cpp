@@ -444,7 +444,7 @@ void BJProgress::indicate(int percentComplete) {
 //
 
 BJPlayer::BJPlayer(const BJShoe & shoe, BJRules & rules, BJStrategy & strategy,
-                   BJProgress & progress) {
+                   BJProgress & progress) : pStrategy(0) {
     reset(shoe, rules, strategy, progress);
 }
 
@@ -453,6 +453,7 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
 
     // Forget about any cards already dealt from the shoe, so shoe.reset(hand)
     // will work.
+    pStrategy = &strategy;
     this->shoe = shoe;
     numHands = 0;
     for (int card = 1; card <= 10; card++) {
@@ -525,9 +526,18 @@ double BJPlayer::getValue() const {
 
 int BJPlayer::getOption(const BJHand & hand, int upCard, bool doubleDown,
                         bool split, bool surrender) {
+
+    // Use the provided fixed strategy if it is specified.
+    int option = pStrategy->getOption(
+        hand, upCard, doubleDown, split, surrender);
+    if (option != BJ_MAX_VALUE) {
+        return option;
+    }
+
+    // Otherwise compute the strategy maximizing expected value.
     PlayerHand & testHand = playerHands[findHand(hand)];
     double value = testHand.valueStand[false][upCard - 1];
-    int option = BJ_STAND;
+    option = BJ_STAND;
     if (value < testHand.valueHit[false][upCard - 1]) {
         value = testHand.valueHit[false][upCard - 1];
         option = BJ_HIT;

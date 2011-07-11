@@ -1040,7 +1040,7 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
                                 // If further resplitting is allowed, condition
                                 // on NOT drawing an additional pair.
                                 double p = shoe.getProbability(card);
-                                if (splitHands < maxSplitHands) {
+                                if (splitHands < maxSplitHands && pNoPair > 0) {
                                     p /= pNoPair;
                                 }
                                 if (card != pairCard
@@ -1189,29 +1189,33 @@ void BJPlayer::conditionNoBlackjack() {
             if (shoe.cards[0]) {
                 shoe.deal(1);
                 double p = (double)1 - shoe.getProbability(10);
-                if (currentHand.numCards == 2 && currentHand.count == 21) {
-                    hand.valueStand[false][0] /= p;
-                } else {
-                    hand.valueStand[false][0] = (hand.
-                            valueStand[false][0] + 1 - p)/p;
+                if (p > 0) {
+                    if (currentHand.numCards == 2 && currentHand.count == 21) {
+                        hand.valueStand[false][0] /= p;
+                    } else {
+                        hand.valueStand[false][0] = (hand.
+                                valueStand[false][0] + 1 - p)/p;
+                    }
+                    hand.valueHit[false][0] = (hand.valueHit[false][0] + 1 - p)/p;
+                    hand.valueDoubleDown[false][0] = (hand.
+                            valueDoubleDown[false][0] + 1 - p)/p;
                 }
-                hand.valueHit[false][0] = (hand.valueHit[false][0] + 1 - p)/p;
-                hand.valueDoubleDown[false][0] = (hand.
-                        valueDoubleDown[false][0] + 1 - p)/p;
                 shoe.undeal(1);
             }
             if (shoe.cards[9]) {
                 shoe.deal(10);
                 double p = (double)1 - shoe.getProbability(1);
-                if (currentHand.numCards == 2 && currentHand.count == 21) {
-                    hand.valueStand[false][9] /= p;
-                } else {
-                    hand.valueStand[false][9] = (hand.
-                            valueStand[false][9] + 1 - p)/p;
+                if (p > 0) {
+                    if (currentHand.numCards == 2 && currentHand.count == 21) {
+                        hand.valueStand[false][9] /= p;
+                    } else {
+                        hand.valueStand[false][9] = (hand.
+                                valueStand[false][9] + 1 - p)/p;
+                    }
+                    hand.valueHit[false][9] = (hand.valueHit[false][9] + 1 - p)/p;
+                    hand.valueDoubleDown[false][9] = (hand.
+                            valueDoubleDown[false][9] + 1 - p)/p;
                 }
-                hand.valueHit[false][9] = (hand.valueHit[false][9] + 1 - p)/p;
-                hand.valueDoubleDown[false][9] = (hand.
-                        valueDoubleDown[false][9] + 1 - p)/p;
                 shoe.undeal(10);
             }
         }
@@ -1223,15 +1227,19 @@ void BJPlayer::conditionNoBlackjack() {
             if (shoe.cards[0]) {
                 shoe.deal(1);
                 double p = (double)1 - shoe.getProbability(10);
-                valueSplit[pairCard - 1][0] =
-                        (valueSplit[pairCard - 1][0] + 1 - p)/p;
+                if (p > 0) {
+                    valueSplit[pairCard - 1][0] =
+                            (valueSplit[pairCard - 1][0] + 1 - p)/p;
+                }
                 shoe.undeal(1);
             }
             if (shoe.cards[9]) {
                 shoe.deal(10);
                 double p = (double)1 - shoe.getProbability(1);
-                valueSplit[pairCard - 1][9] =
-                        (valueSplit[pairCard - 1][9] + 1 - p)/p;
+                if (p > 0) {
+                    valueSplit[pairCard - 1][9] =
+                            (valueSplit[pairCard - 1][9] + 1 - p)/p;
+                }
                 shoe.undeal(10);
             }
         }

@@ -206,11 +206,6 @@ protected:
 class BJRules {
 public:
 
-    // BJRules() is a default constructor allowing derivation from BJRules, and
-    // is equivalent to BJRules(false, true, true, true, false, true, false,
-    // false, false, 1.5).
-    BJRules();
-
     // BJRules(...) is a convenience constructor for creating most common rule
     // variations, specified by:
     //
@@ -229,35 +224,37 @@ public:
     //                          only if resplit is true)
     // lateSurrender        true iff late surrender is allowed
     // bjPayoff             blackjack payoff
-    BJRules(bool hitSoft17, bool doubleAnyTotal, bool double9, bool doubleSoft,
-            bool doubleAfterHit, bool doubleAfterSplit, bool resplit,
-            bool resplitAces, bool lateSurrender, double bjPayoff = 1.5);
+    BJRules(bool hitSoft17 = false, bool doubleAnyTotal = true,
+        bool double9 = true, bool doubleSoft = true,
+        bool doubleAfterHit = false, bool doubleAfterSplit = true,
+        bool resplit = false, bool resplitAces = false,
+        bool lateSurrender = false, double bjPayoff = 1.5);
 
     // ~BJRules() allows appropriate destruction of objects derived from
     // BJRules.
     virtual ~BJRules();
 
     // getHitSoft17() returns true iff the dealer hits soft 17.
-    virtual bool getHitSoft17();
+    virtual bool getHitSoft17() const;
 
     // getDoubleDown(hand) returns true iff doubling down is allowed on the
     // given blackjack hand.
-    virtual bool getDoubleDown(const BJHand & hand);
+    virtual bool getDoubleDown(const BJHand & hand) const;
 
     // getDoubleAfterSplit(hand) returns true iff doubling down is allowed on
     // the given blackjack hand after splitting pairs.
-    virtual bool getDoubleAfterSplit(const BJHand & hand);
+    virtual bool getDoubleAfterSplit(const BJHand & hand) const;
 
     // getResplit(pairCard) returns the maximum number of hands to which the
     // given pairCard may be split.  Valid return values are 1 (no splits), 2
     // (no resplit), 3, or 4.
-    virtual int getResplit(int pairCard);
+    virtual int getResplit(int pairCard) const;
 
     // getLateSurrender() returns true iff late surrender is allowed.
-    virtual bool getLateSurrender();
+    virtual bool getLateSurrender() const;
 
     // getBlackjackPayoff() returns the payoff for blackjack.
-    virtual double getBlackjackPayoff();
+    virtual double getBlackjackPayoff() const;
 
 protected:
     bool hitSoft17,
@@ -311,7 +308,7 @@ public:
 
     // getUsePostSplit() returns true iff post-split strategy is allowed to
     // differ from pre-split strategy when getOption(...) returns BJ_MAX_VALUE.
-    virtual bool getUsePostSplit();
+    virtual bool getUsePostSplit() const;
 
 protected:
     bool usePostSplit;

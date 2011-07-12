@@ -426,12 +426,19 @@ double BJRules::getBlackjackPayoff() {
 // BJStrategy
 //
 
+BJStrategy::BJStrategy(bool usePostSplit) : usePostSplit(usePostSplit) {
+}
+
 BJStrategy::~BJStrategy() {
 }
 
 int BJStrategy::getOption(const BJHand & hand, int upCard, bool doubleDown,
                           bool split, bool surrender) {
     return BJ_MAX_VALUE;
+}
+
+bool BJStrategy::getUsePostSplit() {
+    return usePostSplit;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -451,7 +458,10 @@ void BJProgress::indicate(int percentComplete) {
 //
 
 BJPlayer::BJPlayer(const BJShoe & shoe, BJRules & rules, BJStrategy & strategy,
-                   BJProgress & progress) : pStrategy(0) {
+                   BJProgress & progress) :
+    BJStrategy(),
+    pStrategy(0)
+{
     reset(shoe, rules, strategy, progress);
 }
 
@@ -461,6 +471,7 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
     // Forget about any cards already dealt from the shoe, so shoe.reset(hand)
     // will work.
     pStrategy = &strategy;
+    usePostSplit = strategy.getUsePostSplit();
     this->shoe = shoe;
     numHands = 0;
     for (int card = 1; card <= 10; card++) {
@@ -861,27 +872,43 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
                             }
                             switch (strategy.getOption(currentHand, upCard,
                                     doubleDown, false, false)) {
-
-                            // To be consistent with a "fixed" playing
-                            // strategy, use the option maximizing expected
-                            // value for the non-split hand.
                             case BJ_MAX_VALUE :
-                                j = findHand(currentHand);
-                                testValue = playerHands[j].
-                                        valueStand[false][upCard - 1];
-                                value = hitHand.valueStand[split][upCard - 1];
-                                if (testValue < playerHands[j].
-                                        valueHit[false][upCard - 1]) {
-                                    testValue = playerHands[j].
-                                            valueHit[false][upCard - 1];
-                                    value = hitHand.
-                                            valueHit[split][upCard - 1];
-                                }
-                                if (doubleDown) {
-                                    if (testValue < playerHands[j].
-                                          valueDoubleDown[false][upCard - 1]) {
+                                if (usePostSplit) {
+                                    value = hitHand.valueStand[split][upCard - 1];
+                                    if (value < hitHand.
+                                            valueHit[split][upCard - 1]) {
                                         value = hitHand.
-                                            valueDoubleDown[split][upCard - 1];
+                                                valueHit[split][upCard - 1];
+                                    }
+                                    if (doubleDown) {
+                                        if (value < hitHand.
+                                                valueDoubleDown[split][upCard - 1]) {
+                                            value = hitHand.
+                                                valueDoubleDown[split][upCard - 1];
+                                        }
+                                    }
+                                } else {
+
+                                    // To be consistent with a "fixed" playing
+                                    // strategy, use the option maximizing expected
+                                    // value for the non-split hand.
+                                    j = findHand(currentHand);
+                                    testValue = playerHands[j].
+                                            valueStand[false][upCard - 1];
+                                    value = hitHand.valueStand[split][upCard - 1];
+                                    if (testValue < playerHands[j].
+                                            valueHit[false][upCard - 1]) {
+                                        testValue = playerHands[j].
+                                                valueHit[false][upCard - 1];
+                                        value = hitHand.
+                                                valueHit[split][upCard - 1];
+                                    }
+                                    if (doubleDown) {
+                                        if (testValue < playerHands[j].
+                                            valueDoubleDown[false][upCard - 1]) {
+                                            value = hitHand.
+                                                valueDoubleDown[split][upCard - 1];
+                                        }
                                     }
                                 }
                                 break;
@@ -1009,30 +1036,49 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
                                             getDoubleAfterSplit(currentHand);
                                     switch (strategy.getOption(currentHand,
                                             upCard, doubleDown, false, false)){
-
-                                    // Again, use the playing option that
-                                    // maximizes expected value for the non-
-                                    // split hand.
                                     case BJ_MAX_VALUE :
-                                        j = findHand(currentHand);
-                                        testValue = playerHands[j].
-                                                valueStand[false][upCard - 1];
-                                        value = hand.
-                                                valueStand[true][upCard - 1];
-                                        if (testValue < playerHands[j].
-                                                valueHit[false][upCard - 1]) {
-                                            testValue = playerHands[j].
-                                                   valueHit[false][upCard - 1];
+                                        if (usePostSplit) {
                                             value = hand.
-                                                    valueHit[true][upCard - 1];
-                                        }
-                                        if (doubleDown) {
-                                            if (testValue < playerHands[j].
-                                                valueDoubleDown[false]
-                                                        [upCard - 1]) {
+                                                    valueStand[true][upCard - 1];
+                                            if (value < hand.
+                                                    valueHit[true][upCard - 1]) {
                                                 value = hand.
+                                                        valueHit[true][upCard - 1];
+                                            }
+                                            if (doubleDown) {
+                                                if (value < hand.
                                                     valueDoubleDown[true]
-                                                        [upCard - 1];
+                                                            [upCard - 1]) {
+                                                        value = hand.
+                                                        valueDoubleDown[true]
+                                                            [upCard - 1];
+                                                }
+                                            }
+                                        } else {
+
+                                            // Again, use the playing option that
+                                            // maximizes expected value for the non-
+                                            // split hand.
+                                            j = findHand(currentHand);
+                                            testValue = playerHands[j].
+                                                    valueStand[false][upCard - 1];
+                                            value = hand.
+                                                    valueStand[true][upCard - 1];
+                                            if (testValue < playerHands[j].
+                                                    valueHit[false][upCard - 1]) {
+                                                testValue = playerHands[j].
+                                                    valueHit[false][upCard - 1];
+                                                value = hand.
+                                                        valueHit[true][upCard - 1];
+                                            }
+                                            if (doubleDown) {
+                                                if (testValue < playerHands[j].
+                                                    valueDoubleDown[false]
+                                                            [upCard - 1]) {
+                                                    value = hand.
+                                                        valueDoubleDown[true]
+                                                            [upCard - 1];
+                                                }
                                             }
                                         }
                                         break;

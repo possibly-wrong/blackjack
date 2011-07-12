@@ -134,6 +134,7 @@ int main() {
         doubleAfterSplit,
         resplit,
         resplitAces,
+        usePostSplit,
         lateSurrender;
     double bjPayoff;
 
@@ -186,6 +187,10 @@ int main() {
         resplitAces = (*input == 'Y' || *input == 'y');
     }
 
+    printf("Enter 'Y' or 'y' if post-split strategy differs from pre-split: ");
+    scanf("%1s", input);
+    usePostSplit = (*input == 'Y' || *input == 'y');
+
     printf("Enter 'Y' or 'y' if late surrender is allowed: ");
     scanf("%1s", input);
     lateSurrender = (*input == 'Y' || *input == 'y');
@@ -204,7 +209,7 @@ int main() {
     }
     BJRules rules(hitSoft17, doubleAnyTotal, double9, doubleSoft, doubleAfterHit,
         doubleAfterSplit, resplit, resplitAces, lateSurrender, bjPayoff);
-    BJStrategy strategy;
+    BJStrategy strategy(usePostSplit);
     Progress progress;
     BJPlayer *player = new BJPlayer(*shoe, rules, strategy, progress);
 
@@ -240,6 +245,8 @@ int main() {
         fprintf(file, ", no resplit");
     else if (resplitAces)
         fprintf(file, ", RSA");
+    if (usePostSplit)
+        fprintf(file, ", use post-split strategy");
     if (lateSurrender)
         fprintf(file, ", surrender");
     fprintf(file, "\n\n");

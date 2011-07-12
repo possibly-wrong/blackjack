@@ -279,6 +279,11 @@ protected:
 class BJStrategy {
 public:
 
+    // Create a strategy, where usePostSplit indicates whether post-split
+    // strategy is allowed to differ from pre-split strategy when
+    // getOption(...) returns BJ_MAX_VALUE.
+    BJStrategy(bool usePostSplit = false);
+
     // ~BJStrategy() allows appropriate destruction of objects derived from
     // BJStrategy.
     virtual ~BJStrategy();
@@ -303,6 +308,13 @@ public:
     // BJStrategy::getOption(...) returns BJ_MAX_VALUE.
     virtual int getOption(const BJHand & hand, int upCard, bool doubleDown,
                           bool split, bool surrender);
+
+    // getUsePostSplit() returns true iff post-split strategy is allowed to
+    // differ from pre-split strategy when getOption(...) returns BJ_MAX_VALUE.
+    virtual bool getUsePostSplit();
+
+protected:
+    bool usePostSplit;
 };
 
 // The BJProgress interface allows some indication of progress of the creation

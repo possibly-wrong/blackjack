@@ -208,8 +208,9 @@ int main() {
     } else {
         shoe = new BJShoe(cards);
     }
-    BJRules rules(hitSoft17, doubleAnyTotal, double9, doubleSoft, doubleAfterHit,
-        doubleAfterSplit, resplit, resplitAces, lateSurrender, bjPayoff);
+    BJRules rules(hitSoft17, doubleAnyTotal, double9, doubleSoft,
+        doubleAfterHit, doubleAfterSplit, resplit, resplitAces, lateSurrender,
+        bjPayoff);
     BJStrategy strategy(usePostSplit);
     Progress progress;
     BJPlayer *player = new BJPlayer(*shoe, rules, strategy, progress);

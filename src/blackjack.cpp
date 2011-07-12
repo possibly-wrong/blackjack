@@ -361,43 +361,32 @@ void BJDealer::countHands() {
 // BJRules
 //
 
-BJRules::BJRules() {
-    hitSoft17 = false;
-    doubleAnyTotal = true;
-    double9 = true;
-    doubleSoft = true;
-    doubleAfterHit = false;
-    doubleAfterSplit = true;
-    resplit = false;
-    resplitAces = false;
-    lateSurrender = false;
-    bjPayoff = 1.5;
-}
-
 BJRules::BJRules(bool hitSoft17, bool doubleAnyTotal, bool double9,
                  bool doubleSoft, bool doubleAfterHit, bool doubleAfterSplit,
                  bool resplit, bool resplitAces, bool lateSurrender,
-                 double bjPayoff) {
-    this->hitSoft17 = hitSoft17;
-    this->doubleAnyTotal = doubleAnyTotal;
-    this->double9 = double9;
-    this->doubleSoft = doubleSoft;
-    this->doubleAfterHit = doubleAfterHit;
-    this->doubleAfterSplit = doubleAfterSplit;
-    this->resplit = resplit;
-    this->resplitAces = resplitAces;
-    this->lateSurrender = lateSurrender;
-    this->bjPayoff = bjPayoff;
+                 double bjPayoff) :
+    hitSoft17(hitSoft17),
+    doubleAnyTotal(doubleAnyTotal),
+    double9(double9),
+    doubleSoft(doubleSoft),
+    doubleAfterHit(doubleAfterHit),
+    doubleAfterSplit(doubleAfterSplit),
+    resplit(resplit),
+    resplitAces(resplitAces),
+    lateSurrender(lateSurrender),
+    bjPayoff(bjPayoff) {
+    // empty
 }
 
 BJRules::~BJRules() {
+    // empty
 }
 
-bool BJRules::getHitSoft17() {
+bool BJRules::getHitSoft17() const {
     return hitSoft17;
 }
 
-bool BJRules::getDoubleDown(const BJHand & hand) {
+bool BJRules::getDoubleDown(const BJHand & hand) const {
     return (
         (doubleAnyTotal || hand.getCount() == 10 || hand.getCount() == 11 ||
             (double9 && hand.getCount() == 9)) &&
@@ -405,19 +394,19 @@ bool BJRules::getDoubleDown(const BJHand & hand) {
         (doubleAfterHit || hand.getCards() == 2));
 }
 
-bool BJRules::getDoubleAfterSplit(const BJHand & hand) {
+bool BJRules::getDoubleAfterSplit(const BJHand & hand) const {
     return (doubleAfterSplit && getDoubleDown(hand));
 }
 
-int BJRules::getResplit(int pairCard) {
+int BJRules::getResplit(int pairCard) const {
     return ((resplit && (resplitAces || pairCard != 1)) ? 4 : 2);
 }
 
-bool BJRules::getLateSurrender() {
+bool BJRules::getLateSurrender() const {
     return lateSurrender;
 }
 
-double BJRules::getBlackjackPayoff() {
+double BJRules::getBlackjackPayoff() const {
     return bjPayoff;
 }
 
@@ -426,10 +415,13 @@ double BJRules::getBlackjackPayoff() {
 // BJStrategy
 //
 
-BJStrategy::BJStrategy(bool usePostSplit) : usePostSplit(usePostSplit) {
+BJStrategy::BJStrategy(bool usePostSplit) :
+    usePostSplit(usePostSplit) {
+    // empty
 }
 
 BJStrategy::~BJStrategy() {
+    // empty
 }
 
 int BJStrategy::getOption(const BJHand & hand, int upCard, bool doubleDown,
@@ -437,7 +429,7 @@ int BJStrategy::getOption(const BJHand & hand, int upCard, bool doubleDown,
     return BJ_MAX_VALUE;
 }
 
-bool BJStrategy::getUsePostSplit() {
+bool BJStrategy::getUsePostSplit() const {
     return usePostSplit;
 }
 
@@ -447,9 +439,11 @@ bool BJStrategy::getUsePostSplit() {
 //
 
 BJProgress::~BJProgress() {
+    // empty
 }
 
 void BJProgress::indicate(int percentComplete) {
+    // empty
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -460,8 +454,7 @@ void BJProgress::indicate(int percentComplete) {
 BJPlayer::BJPlayer(const BJShoe & shoe, BJRules & rules, BJStrategy & strategy,
                    BJProgress & progress) :
     BJStrategy(),
-    pStrategy(0)
-{
+    pStrategy(0) {
     reset(shoe, rules, strategy, progress);
 }
 
@@ -603,8 +596,8 @@ bool BJPlayer::record(const BJHand & hand) {
         result = true;
     } else {
 
-        // Or if it may be a split hand; note that we don't need extra hands for split
-        // aces, since hitting split aces is not allowed.
+        // Or if it may be a split hand; note that we don't need extra hands
+        // for split aces, since hitting split aces is not allowed.
         for (int card = 2; card <= 10; card++) {
             int s = resplit[card - 1];
             if (hand.cards[card - 1] < s) {
@@ -890,8 +883,8 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
                                 } else {
 
                                     // To be consistent with a "fixed" playing
-                                    // strategy, use the option maximizing expected
-                                    // value for the non-split hand.
+                                    // strategy, use the option maximizing
+                                    // expected value for the non-split hand.
                                     j = findHand(currentHand);
                                     testValue = playerHands[j].
                                             valueStand[false][upCard - 1];
@@ -1056,9 +1049,9 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
                                             }
                                         } else {
 
-                                            // Again, use the playing option that
-                                            // maximizes expected value for the non-
-                                            // split hand.
+                                            // Again, use the playing option
+                                            // that maximizes expected value
+                                            // for the non-split hand.
                                             j = findHand(currentHand);
                                             testValue = playerHands[j].
                                                     valueStand[false][upCard - 1];

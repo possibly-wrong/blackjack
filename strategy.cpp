@@ -135,6 +135,7 @@ int main() {
         resplit,
         resplitAces,
         lateSurrender;
+    double bjPayoff;
 
     printf("\nEnter number of decks, or 0 to enter shoe: ");
     scanf("%d", &numDecks);
@@ -189,6 +190,9 @@ int main() {
     scanf("%1s", input);
     lateSurrender = (*input == 'Y' || *input == 'y');
 
+    printf("Enter blackjack payoff (normally 1.5): ");
+    scanf("%lf", &bjPayoff);
+
 // Compute basic strategy.
 
     printf("\n");
@@ -199,7 +203,7 @@ int main() {
         shoe = new BJShoe(cards);
     }
     BJRules rules(hitSoft17, doubleAnyTotal, double9, doubleSoft, doubleAfterHit,
-        doubleAfterSplit, resplit, resplitAces, lateSurrender);
+        doubleAfterSplit, resplit, resplitAces, lateSurrender, bjPayoff);
     BJStrategy strategy;
     Progress progress;
     BJPlayer *player = new BJPlayer(*shoe, rules, strategy, progress);

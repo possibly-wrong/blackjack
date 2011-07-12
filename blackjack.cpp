@@ -368,14 +368,16 @@ BJRules::BJRules() {
     doubleSoft = true;
     doubleAfterHit = false;
     doubleAfterSplit = true;
-    resplit = true;
+    resplit = false;
     resplitAces = false;
     lateSurrender = false;
+    bjPayoff = 1.5;
 }
 
 BJRules::BJRules(bool hitSoft17, bool doubleAnyTotal, bool double9,
                  bool doubleSoft, bool doubleAfterHit, bool doubleAfterSplit,
-                 bool resplit, bool resplitAces, bool lateSurrender) {
+                 bool resplit, bool resplitAces, bool lateSurrender,
+                 double bjPayoff) {
     this->hitSoft17 = hitSoft17;
     this->doubleAnyTotal = doubleAnyTotal;
     this->double9 = double9;
@@ -385,6 +387,7 @@ BJRules::BJRules(bool hitSoft17, bool doubleAnyTotal, bool double9,
     this->resplit = resplit;
     this->resplitAces = resplitAces;
     this->lateSurrender = lateSurrender;
+    this->bjPayoff = bjPayoff;
 }
 
 BJRules::~BJRules() {
@@ -412,6 +415,10 @@ int BJRules::getResplit(int pairCard) {
 
 bool BJRules::getLateSurrender() {
     return lateSurrender;
+}
+
+double BJRules::getBlackjackPayoff() {
+    return bjPayoff;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -491,7 +498,7 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
     // Blackjack pays 3:2, so correct the value for standing on this hand.  We
     // wait to do this until after computing E(split) since a blackjack after
     // splitting a pair only pays even money.
-    correctStandBlackjack();
+    correctStandBlackjack(rules.getBlackjackPayoff());
 
     // Compute overall expected values, condition individual hands on no dealer
     // blackjack, and finalize progress indicator.
@@ -1070,7 +1077,7 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
     }
 }
 
-void BJPlayer::correctStandBlackjack() {
+void BJPlayer::correctStandBlackjack(double bjPayoff) {
     if (shoe.totalCards[0] && shoe.totalCards[9]) {
         currentHand.reset();
         currentHand.deal(1); currentHand.deal(10);
@@ -1078,19 +1085,17 @@ void BJPlayer::correctStandBlackjack() {
         shoe.reset(currentHand);
         if (shoe.cards[0]) {
             shoe.deal(1);
-            hand.valueStand[false][0] = (double)3/2
-                    *((double)1 - shoe.getProbability(10));
+            hand.valueStand[false][0] = bjPayoff*(1 - shoe.getProbability(10));
             shoe.undeal(1);
         }
         for (int upCard = 2; upCard < 10; upCard++) {
             if (shoe.cards[upCard - 1]) {
-                hand.valueStand[false][upCard - 1] = (double)3/2;
+                hand.valueStand[false][upCard - 1] = bjPayoff;
             }
         }
         if (shoe.cards[9]) {
             shoe.deal(10);
-            hand.valueStand[false][9] = (double)3/2
-                    *((double)1 - shoe.getProbability(1));
+            hand.valueStand[false][9] = bjPayoff*(1 - shoe.getProbability(1));
             shoe.undeal(10);
         }
     }

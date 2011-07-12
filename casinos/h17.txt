@@ -1,0 +1,115 @@
+###########################################################
+#
+#  H17
+#
+
+###########################################################
+#
+#  Number of decks in the shoe.
+#
+
+Number_Of_Decks = 6
+
+###########################################################
+#
+#  1 : Dealer hits soft 17.
+#  0 : Dealer stands on soft 17.
+#
+
+Dealer_Hits_Soft_17 = 1
+
+###########################################################
+#
+#  1 : Doubling down is allowed on any hand total.
+#  0 : Doubling down is allowed only on (9 or ) 10 or 11.
+#
+
+Double_Down_Any_Total = 1
+
+###########################################################
+#
+#  Valid only if Double_Down_Any_Total = 0.
+#
+#  1 : Doubling down is allowed on 9, 10 or 11.
+#  0 : Doubling down is allowed on 10 or 11 only.
+#
+
+Double_Down_9 = 1
+
+###########################################################
+#
+#  1 : Doubling down is allowed on soft hands.
+#  0 : Doubling down is not allowed on soft hands.
+#
+
+Double_Down_Soft = 1
+
+###########################################################
+#
+#  1 : Doubling down is allowed on any number of cards.
+#  0 : Doubling down is allowed only on the first two
+#      cards.
+#
+
+Double_Down_After_Hit = 0
+
+###########################################################
+#
+#  1 : Doubling down is allowed after splitting pairs,
+#      subject to the same restrictions above.
+#  0 : Doubling down is not allowed after splitting pairs.
+#
+
+Double_Down_After_Split = 1
+
+###########################################################
+#
+#  1 : Resplitting pairs (up to a maximum of 4 hands) is
+#      allowed.
+#  0 : Resplitting pairs is not allowed.
+#
+
+Resplit_Allowed = 1
+
+###########################################################
+#
+#  Valid only if Resplit_Allowed = 1.
+#
+#  1 : Resplitting aces is allowed.
+#  0 : Resplitting aces is not allowed.
+#
+
+Resplit_Aces_Allowed = 1
+
+###########################################################
+#
+#  1 : Late surrender is allowed.
+#  0 : Late surrender is not allowed.
+#
+
+Surrender_Allowed = 1
+
+###########################################################
+#
+#  Practice mode.
+#
+# -2 : Shuffle and deal entire shoe, but recompute overall
+#      basic strategy expected value before each hand.
+#
+# -1 : Shuffle and deal entire shoe, but recompute optimal
+#      strategy before each hand.
+#
+#  0 : Shuffle and deal entire shoe.
+#  1 : Practice hard hands.
+#  2 : Practice soft hands.
+#  3 : Practice pair hands.
+#
+
+Practice = 0
+
+###########################################################
+#
+#  Pause, in milliseconds, before dealing each card.
+#
+
+Dealer_Speed = 500

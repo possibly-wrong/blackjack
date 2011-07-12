@@ -207,8 +207,8 @@ class BJRules {
 public:
 
     // BJRules() is a default constructor allowing derivation from BJRules, and
-    // is equivalent to BJRules(false, true, true, true, false, true, true,
-    // false, false).
+    // is equivalent to BJRules(false, true, true, true, false, true, false,
+    // false, false, 1.5).
     BJRules();
 
     // BJRules(...) is a convenience constructor for creating most common rule
@@ -228,9 +228,10 @@ public:
     // resplitAces          true iff aces may be resplit (up to 4 hands; valid
     //                          only if resplit is true)
     // lateSurrender        true iff late surrender is allowed
+    // bjPayoff             blackjack payoff
     BJRules(bool hitSoft17, bool doubleAnyTotal, bool double9, bool doubleSoft,
             bool doubleAfterHit, bool doubleAfterSplit, bool resplit,
-            bool resplitAces, bool lateSurrender);
+            bool resplitAces, bool lateSurrender, double bjPayoff = 1.5);
 
     // ~BJRules() allows appropriate destruction of objects derived from
     // BJRules.
@@ -255,6 +256,9 @@ public:
     // getLateSurrender() returns true iff late surrender is allowed.
     virtual bool getLateSurrender();
 
+    // getBlackjackPayoff() returns the payoff for blackjack.
+    virtual double getBlackjackPayoff();
+
 protected:
     bool hitSoft17,
         doubleAnyTotal,
@@ -265,6 +269,7 @@ protected:
         resplit,
         resplitAces,
         lateSurrender;
+    double bjPayoff;
 };
 
 // The BJStrategy interface allows specification of a possibly sub-optimal
@@ -417,7 +422,7 @@ protected:
                          int splitHands);
 
     void computeSplit(BJRules & rules, BJStrategy & strategy);
-    void correctStandBlackjack();
+    void correctStandBlackjack(double bjPayoff);
     void computeOverall(BJRules & rules, BJStrategy & strategy);
     double computeSurrender(int upCard);
     void conditionNoBlackjack();

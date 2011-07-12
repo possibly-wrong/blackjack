@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // game.cpp
-// Copyright (C) 2006 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2011 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -23,8 +23,9 @@ END_JOYSTICK_DRIVER_LIST
 
 #include "colors.h"
 #include "blackjack.h"
-#include <stdlib.h>
-#include <time.h>
+#include <cstdlib>
+#include <ctime>
+using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -508,8 +509,8 @@ int main() {
 
     // Display title and license notice.
     clear(screen);
-    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 5.2");
-    textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2006 Eric Farmer");
+    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 5.3");
+    textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2011 Eric Farmer");
     textprintf_centre(screen, font, 400, 124, WHITE, "Original card images by Oliver Xymoron");
     textprintf_centre(screen, font, 400, 132, WHITE, "Written using the Allegro Game Programming Library");
     textprintf_centre(screen, font, 400, 148, WHITE, "Blackjack comes with ABSOLUTELY NO WARRANTY. This is");

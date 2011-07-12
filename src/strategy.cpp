@@ -1,12 +1,13 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // strategy.cpp
-// Copyright (C) 2006 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2011 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "blackjack.h"
-#include <stdio.h>
+#include <cstdio>
+using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -116,8 +117,8 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Basic Strategy Calculator version 5.2\n");
-    printf("Copyright (C) 2006 Eric Farmer\n");
+    printf("Blackjack Basic Strategy Calculator version 5.3\n");
+    printf("Copyright (C) 2011 Eric Farmer\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
     printf("This is free software, and you are welcome to\n");
     printf("redistribute it under certain conditions; see\n");

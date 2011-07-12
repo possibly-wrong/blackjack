@@ -1,6 +1,6 @@
 Blackjack Game and Basic Strategy Calculator
-Version 5.2
-Copyright (C) 2006 Eric Farmer (erfarmer@gmail.com)
+Version 5.3
+Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
 Blackjack game written using the Allegro Game Programming Library
@@ -99,7 +99,8 @@ the Blackjack game (see above).
 Once basic strategy for the selected rule variations has been computed,
 enter the name of a file in which to save the basic strategy table.
 This will be a text file, so a '.txt' extension is suggested.  (Tip: the
-basic strategy table prints nicely on three pages when opened in Word.)
+basic strategy table prints nicely on three pages when opened in Word,
+with Courier New 10-point font and 0.75-inch left and right margins.)
 
 In addition to the table of basic strategy for all possible two-card
 player hands and all possible dealer up cards, the saved file also
@@ -141,6 +142,12 @@ are to be entered as 1, not 11.
 ************************************************************************
 
 *** Revision History ***
+
+5.3  The engine interface now has options for specifying whether post-
+     split strategy differs from pre-split, specifying the payoff for
+     blackjack, and specifying "mixed" strategies that combine fixed
+     stand/hit/etc. decisions with maximizing expected value.  Divide by
+     zero bugs for small shoe sizes have also been fixed.
 
 5.2  Additional practice modes (-1, -2) plays an entire shoe, but
      recompute expected value and/or optimal strategy before each hand.

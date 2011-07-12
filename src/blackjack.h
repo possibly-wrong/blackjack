@@ -25,8 +25,8 @@ public:
     // BJHand() creates an empty blackjack hand.
     BJHand();
 
-    // BJHand(cards) creates a blackjack hand with cards[i - 1] number of cards
-    // of value i, for each i in the range 1 (ace) through 10.
+    // BJHand(cards) creates a blackjack hand with cards[i] number of cards of
+    // value i, for each i in the range 1 (ace) through 10.
     BJHand(const int cards[]);
 
     // getCards(card) returns the number of cards with the given value in the
@@ -46,8 +46,8 @@ public:
     // reset() removes all cards from the hand.
     void reset();
 
-    // reset(cards) sets the hand to contain cards[i - 1] number of cards of
-    // value i, for each i in the range 1 (ace) through 10.
+    // reset(cards) sets the hand to contain cards[i] number of cards of value
+    // i, for each i in the range 1 (ace) through 10.
     void reset(const int cards[]);
 
     // deal(card) deals a card of the given value to the hand (possibly busting
@@ -59,7 +59,7 @@ public:
     void undeal(int card);
 
 protected:
-    int cards[10],
+    int cards[11],
         numCards,
         count;
     bool soft;
@@ -79,7 +79,7 @@ public:
     // 52-card decks, with all cards in the shoe (i.e., undealt).
     BJShoe(int numDecks = 1);
 
-    // BJShoe(cards) creates a blackjack shoe containing cards[i - 1] number of
+    // BJShoe(cards) creates a blackjack shoe containing cards[i] number of
     // cards of value i, for each i in the range 1 (ace) through 10, with all
     // cards in the shoe (i.e., undealt).
     BJShoe(const int cards[]);
@@ -108,9 +108,9 @@ public:
     // decks, with all cards in the shoe (i.e., undealt).
     void reset(int numDecks);
 
-    // reset(cards) sets the shoe to contain cards[i - 1] number of cards of
-    // value i, for each i in the range 1 (ace) through 10, with all cards in
-    // the shoe (i.e., undealt).
+    // reset(cards) sets the shoe to contain cards[i] number of cards of value
+    // i, for each i in the range 1 (ace) through 10, with all cards in the
+    // shoe (i.e., undealt).
     void reset(const int cards[]);
 
     // deal(card) deals a card of the given value from the shoe, where card is
@@ -122,8 +122,8 @@ public:
     void undeal(int card);
 
 protected:
-    int totalCards[10],
-        cards[10],
+    int totalCards[11],
+        cards[11],
         numCards;
 
     friend class BJDealer;
@@ -178,8 +178,8 @@ public:
 protected:
     bool hitSoft17;
     struct DealerHand {
-        int cards[10],
-            multiplier[10];
+        int cards[11],
+            multiplier[11];
     };
     struct DealerHandCount {
         int numHands;
@@ -187,13 +187,13 @@ protected:
     } dealerHandCount[5];
     BJHand currentHand;
     int upCard;
-    double probabilityBust[10],
-        probabilityCount[5][10],
-        probabilityBlackjack[10],
-        probabilityCard[10],
-        lookup[13][10][12];
-    static const int maxSvalues[10],
-        maxHvalues[10];
+    double probabilityBust[11],
+        probabilityCount[5][11],
+        probabilityBlackjack[11],
+        probabilityCard[11],
+        lookup[13][11][12];
+    static const int maxSvalues[11],
+        maxHvalues[11];
 
     void countHands();
 
@@ -388,22 +388,22 @@ protected:
     int numHands,
         playerHandCount[22][2];
     struct PlayerHand {
-        int cards[10],
-            hitHand[10],
+        int cards[11],
+            hitHand[11],
             nextHand;
-        double valueStand[2][10],
-            valueHit[2][10],
-            valueDoubleDown[2][10],
+        double valueStand[2][11],
+            valueHit[2][11],
+            valueDoubleDown[2][11],
 
-            probabilityBust[10],
-            probabilityCount[5][10],
-            probabilityBlackjack[10];
+            probabilityBust[11],
+            probabilityCount[5][11],
+            probabilityBlackjack[11];
     } playerHands[16373];
     BJHand currentHand;
     BJShoe shoe;
-    int resplit[10];
-    double valueSplit[10][10],
-        overallValues[10],
+    int resplit[11];
+    double valueSplit[11][11],
+        overallValues[11],
         overallValue;
 
     int findHand(const BJHand & hand) const;

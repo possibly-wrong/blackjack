@@ -119,6 +119,7 @@ int main() {
 
     printf("Blackjack Basic Strategy Calculator version 5.3\n");
     printf("Copyright (C) 2011 Eric Farmer\n");
+    printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
     printf("This is free software, and you are welcome to\n");
     printf("redistribute it under certain conditions; see\n");

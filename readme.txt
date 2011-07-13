@@ -4,6 +4,7 @@ Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
 Blackjack game written using the Allegro Game Programming Library
+Thanks to London Colin for many improvements and bug fixes
 
 ************************************************************************
 
@@ -147,7 +148,8 @@ are to be entered as 1, not 11.
      split strategy differs from pre-split, specifying the payoff for
      blackjack, and specifying "mixed" strategies that combine fixed
      stand/hit/etc. decisions with maximizing expected value.  Divide by
-     zero bugs for small shoe sizes have also been fixed.
+     zero bugs for small shoe sizes have also been fixed, as well as
+     some code clean-up to improve readability.
 
 5.2  Additional practice modes (-1, -2) plays an entire shoe, but
      recompute expected value and/or optimal strategy before each hand.

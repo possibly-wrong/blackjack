@@ -1,5 +1,5 @@
 Blackjack Game and Basic Strategy Calculator
-Version 5.3
+Version 5.4
 Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
@@ -143,6 +143,9 @@ are to be entered as 1, not 11.
 ************************************************************************
 
 *** Revision History ***
+
+5.4  Several minor changes to the computation of dealer probabilities
+     yield significant improvement in speed.
 
 5.3  The engine interface now has options for specifying whether post-
      split strategy differs from pre-split, specifying the payoff for

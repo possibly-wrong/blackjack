@@ -37,7 +37,7 @@ bool BJHand::getSoft() const {
 }
 
 void BJHand::reset() {
-    for (int card = 1; card <= 10; card++) {
+    for (int card = 1; card <= 10; ++card) {
         cards[card] = 0;
     }
     numCards = count = 0;
@@ -46,7 +46,7 @@ void BJHand::reset() {
 
 void BJHand::reset(const int cards[]) {
     numCards = count = 0;
-    for (int card = 1; card <= 10; card++) {
+    for (int card = 1; card <= 10; ++card) {
         this->cards[card] = cards[card];
         numCards += cards[card];
         count += card * cards[card];
@@ -60,8 +60,8 @@ void BJHand::reset(const int cards[]) {
 }
 
 void BJHand::deal(int card) {
-    cards[card]++;
-    numCards++;
+    ++cards[card];
+    ++numCards;
     count += card;
     if (card == 1 && count < 12) {
         count += 10;
@@ -73,8 +73,8 @@ void BJHand::deal(int card) {
 }
 
 void BJHand::undeal(int card) {
-    cards[card]--;
-    numCards--;
+    --cards[card];
+    --numCards;
     count -= card;
     if (card == 1 && !cards[1] && soft) {
         count -= 10;
@@ -112,7 +112,7 @@ double BJShoe::getProbability(int card) const {
 
 void BJShoe::reset() {
     numCards = 0;
-    for (int card = 1; card <= 10; card++) {
+    for (int card = 1; card <= 10; ++card) {
         cards[card] = totalCards[card];
         numCards += cards[card];
     }
@@ -120,14 +120,14 @@ void BJShoe::reset() {
 
 void BJShoe::reset(const BJHand & hand) {
     numCards = 0;
-    for (int card = 1; card <= 10; card++) {
+    for (int card = 1; card <= 10; ++card) {
         cards[card] = totalCards[card] - hand.cards[card];
         numCards += cards[card];
     }
 }
 
 void BJShoe::reset(int numDecks) {
-    for (int card = 1; card < 10; card++) {
+    for (int card = 1; card < 10; ++card) {
         cards[card] = totalCards[card] = 4 * numDecks;
     }
     cards[10] = totalCards[10] = 16 * numDecks;
@@ -136,20 +136,20 @@ void BJShoe::reset(int numDecks) {
 
 void BJShoe::reset(const int cards[]) {
     numCards = 0;
-    for (int card = 1; card <= 10; card++) {
+    for (int card = 1; card <= 10; ++card) {
         this->cards[card] = totalCards[card] = cards[card];
         numCards += cards[card];
     }
 }
 
 void BJShoe::deal(int card) {
-    cards[card]--;
-    numCards--;
+    --cards[card];
+    --numCards;
 }
 
 void BJShoe::undeal(int card) {
-    cards[card]++;
-    numCards++;
+    ++cards[card];
+    ++numCards;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -159,20 +159,20 @@ void BJShoe::undeal(int card) {
 
 BJDealer::BJDealer(bool hitSoft17) {
     this->hitSoft17 = hitSoft17;
-    for (int count = 17; count <= 21; count++) {
+    for (int count = 17; count <= 21; ++count) {
         dealerHandCount[count - 17].numHands = 0;
     }
 
     // Enumerate all possible dealer hands, counting multiplicities for each up
     // card.
     currentHand.reset();
-    for (upCard = 1; upCard <= 10; upCard++) {
+    for (upCard = 1; upCard <= 10; ++upCard) {
         currentHand.deal(upCard);
         countHands();
         currentHand.undeal(upCard);
     }
 
-    for (upCard = 1; upCard <= 10; upCard++) {
+    for (upCard = 1; upCard <= 10; ++upCard) {
         probabilityBlackjack[upCard] = 0;
     }
 }
@@ -191,16 +191,16 @@ const int BJDealer::maxHvalues[11] = {0, 11, 8, 5, 4, 3, 2, 2, 1, 1, 1};
 void BJDealer::computeProbabilities(const BJShoe & shoe) {
 
     // Compute lookup[][][].
-    for (upCard = 1; upCard <= 10; upCard++) {
+    for (int upCard = 1; upCard <= 10; ++upCard) {
         int maxS = maxSvalues[upCard],
             maxH = maxHvalues[upCard],
             numCards = shoe.numCards;
-        for (int s = 0; s <= maxS && numCards; s++, numCards--) {
+        for (int s = 0; s <= maxS && numCards; ++s, --numCards) {
             double *l = lookup[s][upCard];
             int cards = shoe.cards[upCard],
                 n = numCards;
             double p = l[0] = (double)cards-- / n--;
-            for (int h = 1; h <= maxH && cards; h++) {
+            for (int h = 1; h <= maxH && cards; ++h) {
                 p *= (double)cards-- / n--;
                 l[h] = p;
             }
@@ -209,23 +209,23 @@ void BJDealer::computeProbabilities(const BJShoe & shoe) {
 
     // probabilityBust[] will accumulate the probability of NOT busting, so we
     // don't have to actually count those hands.
-    for (upCard = 1; upCard <= 10; upCard++) {
+    for (int upCard = 1; upCard <= 10; ++upCard) {
         probabilityBust[upCard] = 0;
     }
 
     // For each (non-bust, non-blackjack) possible outcome, accumulate
     // probability of each hand with that count (that is actually possible in
     // the given shoe).
-    for (int count = 17; count <= 21; count++) {
+    for (int count = 17; count <= 21; ++count) {
         double *pcount = probabilityCount[count - 17];
-        for (upCard = 1; upCard <= 10; upCard++) {
+        for (int upCard = 1; upCard <= 10; ++upCard) {
             pcount[upCard] = 0;
         }
         DealerHandCount & list = dealerHandCount[count - 17];
-        for (int i = 0; i < list.numHands; i++) {
+        for (int i = 0; i < list.numHands; ++i) {
             DealerHand & hand = list.dealerHands[i];
             bool possible = true;
-            for (int card = 1; card <= 10; card++) {
+            for (int card = 1; card <= 10; ++card) {
                 if (hand.cards[card] > shoe.cards[card]) {
                     possible = false;
                     break;
@@ -239,7 +239,7 @@ void BJDealer::computeProbabilities(const BJShoe & shoe) {
             if (possible) {
                 int s = 0;
                 double p = shoe.numCards;
-                for (int card = 1; card <= 10; card++) {
+                for (int card = 1; card <= 10; ++card) {
                     if (hand.cards[card]) {
                         p *= lookup[s][card][hand.cards[card] - 1];
                         s += hand.cards[card];
@@ -249,31 +249,33 @@ void BJDealer::computeProbabilities(const BJShoe & shoe) {
                 // For each up card, a certain number of permutations of the
                 // cards in the hand are possible, each equally likely.  Count
                 // these, conditioned on each up card.
-                for (upCard = 1; upCard <= 10; upCard++) {
-                    if (hand.multiplier[upCard]) {
-                        pcount[upCard] +=
-                            p * hand.multiplier[upCard] / shoe.cards[upCard];
-                    }
+                for (int upCard = 1; upCard <= 10; ++upCard) {
+                    pcount[upCard] += p * hand.multiplier[upCard];
                 }
             }
         }
-        for (upCard = 1; upCard <= 10; upCard++) {
+        for (int upCard = 1; upCard <= 10; ++upCard) {
+            if (shoe.cards[upCard]) {
+                pcount[upCard] /= shoe.cards[upCard];
+            }
             probabilityBust[upCard] += pcount[upCard];
         }
     }
 
     // Compute P(blackjack).
     if (shoe.cards[1] && shoe.cards[10]) {
-        probabilityBlackjack[1] = (double)(shoe.cards[10])/(shoe.numCards - 1);
+        probabilityBlackjack[1] =
+            (double)(shoe.cards[10]) / (shoe.numCards - 1);
         probabilityBust[1] += probabilityBlackjack[1];
-        probabilityBlackjack[10] = (double)(shoe.cards[1])/(shoe.numCards - 1);
+        probabilityBlackjack[10] =
+            (double)(shoe.cards[1]) / (shoe.numCards - 1);
         probabilityBust[10] += probabilityBlackjack[10];
     } else {
         probabilityBlackjack[1] = probabilityBlackjack[10] = 0;
     }
 
     // Now compute P(bust) easily.
-    for (upCard = 1; upCard <= 10; upCard++) {
+    for (int upCard = 1; upCard <= 10; ++upCard) {
         probabilityBust[upCard] = 1 - probabilityBust[upCard];
         probabilityCard[upCard] = shoe.getProbability(upCard);
     }
@@ -285,7 +287,7 @@ double BJDealer::getProbabilityBust(int upCard) const {
 
 double BJDealer::getProbabilityBust() const {
     double p = 0;
-    for (int upCard = 1; upCard <= 10; upCard++) {
+    for (int upCard = 1; upCard <= 10; ++upCard) {
         p += probabilityBust[upCard] * probabilityCard[upCard];
     }
     return p;
@@ -297,7 +299,7 @@ double BJDealer::getProbabilityCount(int count, int upCard) const {
 
 double BJDealer::getProbabilityCount(int count) const {
     double p = 0;
-    for (int upCard = 1; upCard <= 10; upCard++) {
+    for (int upCard = 1; upCard <= 10; ++upCard) {
         p += probabilityCount[count - 17][upCard] * probabilityCard[upCard];
     }
     return p;
@@ -317,7 +319,7 @@ void BJDealer::countHands() {
     // If necessary, draw another card.
     if (currentHand.count < 17 || (hitSoft17
             && currentHand.count == 17 && currentHand.soft)) {
-        for (int card = 1; card <= 10; card++) {
+        for (int card = 1; card <= 10; ++card) {
             currentHand.deal(card);
             countHands();
             currentHand.undeal(card);
@@ -328,29 +330,29 @@ void BJDealer::countHands() {
             || currentHand.count != 21)) {
         DealerHandCount & list = dealerHandCount[currentHand.count - 17];
         bool found = false;
-        for (int i = 0; i < list.numHands; i++) {
+        for (int i = 0; i < list.numHands; ++i) {
             DealerHand & hand = list.dealerHands[i];
             bool match = true;
-            for (int card = 1; card <= 10; card++) {
+            for (int card = 1; card <= 10; ++card) {
                 if (currentHand.cards[card] != hand.cards[card]) {
                     match = false;
                     break;
                 }
             }
             if (match) {
-                hand.multiplier[upCard]++;
+                ++hand.multiplier[upCard];
                 found = true;
                 break;
             }
         }
         if (!found) {
             DealerHand & hand = list.dealerHands[list.numHands];
-            for (int card = 1; card <= 10; card++) {
+            for (int card = 1; card <= 10; ++card) {
                 hand.cards[card] = currentHand.cards[card];
                 hand.multiplier[card] = 0;
             }
-            hand.multiplier[upCard]++;
-            list.numHands++;
+            ++hand.multiplier[upCard];
+            ++list.numHands;
         }
     }
 }
@@ -466,14 +468,14 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
     usePostSplit = strategy.getUsePostSplit();
     this->shoe = shoe;
     numHands = 0;
-    for (int card = 1; card <= 10; card++) {
+    for (int card = 1; card <= 10; ++card) {
         playerHands[numHands].cards[card] =
         playerHands[numHands].hitHand[card] = 0;
         this->shoe.totalCards[card] = shoe.cards[card];
     }
 
     // Remember resplit rules when enumerating player hands.
-    for (int pairCard = 1; pairCard <= 10; pairCard++) {
+    for (int pairCard = 1; pairCard <= 10; ++pairCard) {
         resplit[pairCard] = rules.getResplit(pairCard);
     }
 
@@ -561,7 +563,7 @@ int BJPlayer::getOption(const BJHand & hand, int upCard, bool doubleDown,
     if (split) {
         int pairCard = 1;
         while (!hand.cards[pairCard]) {
-            pairCard++;
+            ++pairCard;
         }
         if (value < valueSplit[pairCard][upCard]) {
             value = valueSplit[pairCard][upCard];
@@ -579,8 +581,8 @@ int BJPlayer::getOption(const BJHand & hand, int upCard, bool doubleDown,
 
 int BJPlayer::findHand(const BJHand & hand) const {
     int i = 0;
-    for (int card = 1; card <= 10; card++) {
-        for (int c = 0; c < hand.cards[card]; c++) {
+    for (int card = 1; card <= 10; ++card) {
+        for (int c = 0; c < hand.cards[card]; ++c) {
             i = playerHands[i].hitHand[card];
         }
     }
@@ -597,7 +599,7 @@ bool BJPlayer::record(const BJHand & hand) {
 
         // Or if it may be a split hand; note that we don't need extra hands
         // for split aces, since hitting split aces is not allowed.
-        for (int card = 2; card <= 10; card++) {
+        for (int card = 2; card <= 10; ++card) {
             int s = resplit[card];
             if (hand.cards[card] < s) {
                 s = hand.cards[card];
@@ -615,7 +617,7 @@ void BJPlayer::countHands(int i, int maxCard) {
 
     // To only count each hand (subset) once, only draw cards higher than any
     // in the hand.
-    for (int card = maxCard; card <= 10; card++) {
+    for (int card = maxCard; card <= 10; ++card) {
         if (shoe.cards[card]) {
             shoe.deal(card);
             currentHand.deal(card);
@@ -624,7 +626,7 @@ void BJPlayer::countHands(int i, int maxCard) {
             // and partially link it up; we'll finish with linkHands() later.
             if (record(currentHand)) {
                 playerHands[i].hitHand[card] = numHands;
-                for (int c = 1; c <= 10; c++) {
+                for (int c = 1; c <= 10; ++c) {
                     playerHands[numHands].cards[c] = currentHand.cards[c];
                     playerHands[numHands].hitHand[c] = 0;
                 }
@@ -637,9 +639,9 @@ void BJPlayer::countHands(int i, int maxCard) {
 }
 
 void BJPlayer::linkHands() {
-    for (int i = 0; i < numHands; i++) {
+    for (int i = 0; i < numHands; ++i) {
         PlayerHand & hand = playerHands[i];
-        for (int card = 1; card <= 10; card++) {
+        for (int card = 1; card <= 10; ++card) {
             if (!hand.hitHand[card] && hand.cards[card] < shoe.cards[card]) {
                 currentHand.reset(hand.cards);
                 currentHand.deal(card);
@@ -653,15 +655,15 @@ void BJPlayer::linkHands() {
 
 void BJPlayer::computeDealer(BJRules & rules, BJProgress & progress) {
     BJDealer dealer(rules.getHitSoft17());
-    for (int i = 0; i < numHands; i++) {
+    for (int i = 0; i < numHands; ++i) {
         progress.indicate(100 * i / numHands);
         PlayerHand & hand = playerHands[i];
         currentHand.reset(hand.cards);
         shoe.reset(currentHand);
         dealer.computeProbabilities(shoe);
-        for (int upCard = 1; upCard <= 10; upCard++) {
+        for (int upCard = 1; upCard <= 10; ++upCard) {
             hand.probabilityBust[upCard] = dealer.probabilityBust[upCard];
-            for (int count = 17; count <= 21; count++) {
+            for (int count = 17; count <= 21; ++count) {
                 hand.probabilityCount[count - 17][upCard] =
                     dealer.probabilityCount[count - 17][upCard];
             }
@@ -672,10 +674,10 @@ void BJPlayer::computeDealer(BJRules & rules, BJProgress & progress) {
 }
 
 void BJPlayer::linkHandCounts(bool split, int pairCard, int splitHands) {
-    for (int count = 4; count <= 21; count++) {
+    for (int count = 4; count <= 21; ++count) {
         playerHandCount[count][false] = playerHandCount[count][true] = 0;
     }
-    for (int i = 0; i < numHands; i++) {
+    for (int i = 0; i < numHands; ++i) {
         currentHand.reset(playerHands[i].cards);
         bool link;
 
@@ -690,7 +692,7 @@ void BJPlayer::linkHandCounts(bool split, int pairCard, int splitHands) {
             link = (currentHand.count <= 21 && currentHand.numCards >= 2);
         }
         if (link) {
-            for (int hands = 1; hands < splitHands; hands++) {
+            for (int hands = 1; hands < splitHands; ++hands) {
                 currentHand.undeal(pairCard);
             }
             int j = playerHandCount[currentHand.count][currentHand.soft];
@@ -707,13 +709,13 @@ void BJPlayer::computeStand(bool split, int pairCard, int splitHands) {
     // and doubling down; it is simply useful to use the already-identified
     // list of valid hands (depending on whether we are splitting, how many
     // hands, etc.).
-    for (count = 21; count >= 11; count--) {
+    for (count = 21; count >= 11; --count) {
         computeStandCount(count, false, split, pairCard, splitHands);
     }
-    for (count = 21; count >= 12; count--) {
+    for (count = 21; count >= 12; --count) {
         computeStandCount(count, true, split, pairCard, splitHands);
     }
-    for (count = 10; count >= 4; count--) {
+    for (count = 10; count >= 4; --count) {
         computeStandCount(count, false, split, pairCard, splitHands);
     }
 }
@@ -725,14 +727,14 @@ void BJPlayer::computeStandCount(int count, bool soft, bool split,
         PlayerHand & hand = playerHands[i];
         currentHand.reset(hand.cards);
         shoe.reset(currentHand);
-        for (int hands = 1; hands < splitHands; hands++) {
+        for (int hands = 1; hands < splitHands; ++hands) {
             currentHand.undeal(pairCard);
         }
-        for (int upCard = 1; upCard <= 10; upCard++) {
+        for (int upCard = 1; upCard <= 10; ++upCard) {
             if (shoe.cards[upCard]) {
                 hand.valueStand[split][upCard] = hand.probabilityBust[upCard] -
                     hand.probabilityBlackjack[upCard];
-                for (int count = 17; count <= 21; count++) {
+                for (int count = 17; count <= 21; ++count) {
                     if (currentHand.count > count) {
                         hand.valueStand[split][upCard] +=
                             hand.probabilityCount[count - 17][upCard];
@@ -749,13 +751,13 @@ void BJPlayer::computeStandCount(int count, bool soft, bool split,
 void BJPlayer::computeDoubleDown(bool split, int pairCard, int splitHands) {
     int count;
 
-    for (count = 21; count >= 11; count--) {
+    for (count = 21; count >= 11; --count) {
         computeDoubleDownCount(count, false, split, pairCard, splitHands);
     }
-    for (count = 21; count >= 12; count--) {
+    for (count = 21; count >= 12; --count) {
         computeDoubleDownCount(count, true, split, pairCard, splitHands);
     }
-    for (count = 10; count >= 4; count--) {
+    for (count = 10; count >= 4; --count) {
         computeDoubleDownCount(count, false, split, pairCard, splitHands);
     }
 }
@@ -767,10 +769,10 @@ void BJPlayer::computeDoubleDownCount(int count, bool soft, bool split,
         PlayerHand & hand = playerHands[i];
         currentHand.reset(hand.cards);
         shoe.reset(currentHand);
-        for (int hands = 1; hands < splitHands; hands++) {
+        for (int hands = 1; hands < splitHands; ++hands) {
             currentHand.undeal(pairCard);
         }
-        for (int upCard = 1; upCard <= 10; upCard++) {
+        for (int upCard = 1; upCard <= 10; ++upCard) {
             if (shoe.cards[upCard]) {
                 shoe.deal(upCard);
 
@@ -785,7 +787,7 @@ void BJPlayer::computeDoubleDownCount(int count, bool soft, bool split,
                     hand.valueDoubleDown[split][upCard] = 0;
                 }
 
-                for (int card = 1; card <= 10; card++) {
+                for (int card = 1; card <= 10; ++card) {
                     if (shoe.cards[card]) {
                         currentHand.deal(card);
                         int j = hand.hitHand[card];
@@ -815,15 +817,15 @@ void BJPlayer::computeHit(BJRules & rules, BJStrategy & strategy, bool split,
     // any values needed for computing the value of a given hand will be
     // available.  We start with the hard hands, but stop at hard 11, since we
     // could draw an ace to a 10, making a soft 21.
-    for (count = 21; count >= 11; count--) {
+    for (count = 21; count >= 11; --count) {
         computeHitCount(count, false, rules, strategy, split, pairCard,
                 splitHands);
     }
-    for (count = 21; count >= 12; count--) {
+    for (count = 21; count >= 12; --count) {
         computeHitCount(count, true, rules, strategy, split, pairCard,
                 splitHands);
     }
-    for (count = 10; count >= 4; count--) {
+    for (count = 10; count >= 4; --count) {
         computeHitCount(count, false, rules, strategy, split, pairCard,
                 splitHands);
     }
@@ -837,14 +839,14 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
         PlayerHand & hand = playerHands[i];
         currentHand.reset(hand.cards);
         shoe.reset(currentHand);
-        for (int hands = 1; hands < splitHands; hands++) {
+        for (int hands = 1; hands < splitHands; ++hands) {
             currentHand.undeal(pairCard);
         }
-        for (int upCard = 1; upCard <= 10; upCard++) {
+        for (int upCard = 1; upCard <= 10; ++upCard) {
             if (shoe.cards[upCard]) {
                 shoe.deal(upCard);
                 hand.valueHit[split][upCard] = 0;
-                for (int card = 1; card <= 10; card++) {
+                for (int card = 1; card <= 10; ++card) {
                     if (shoe.cards[card]) {
                         currentHand.deal(card);
                         int j = hand.hitHand[card];
@@ -928,7 +930,7 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
 }
 
 void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
-    for (int pairCard = 1; pairCard <= 10; pairCard++) {
+    for (int pairCard = 1; pairCard <= 10; ++pairCard) {
         if (resplit[pairCard] >= 2 && shoe.totalCards[pairCard] >= 2) {
 
             // Compute maximum number of split hands.
@@ -941,7 +943,7 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
             double pSplit[5][11];
             shoe.reset();
             shoe.deal(pairCard); shoe.deal(pairCard);
-            for (int upCard = 1; upCard <= 10; upCard++) {
+            for (int upCard = 1; upCard <= 10; ++upCard) {
                 if (shoe.cards[upCard]) {
                     shoe.deal(upCard);
                     double n = shoe.numCards,
@@ -982,7 +984,7 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
             // For each possible number of split hands, re-compute expected
             // values with the appropriate number of pair cards removed.
             for (int splitHands = 2; splitHands <= maxSplitHands;
-                    splitHands++) {
+                    ++splitHands) {
                 linkHandCounts(true, pairCard, splitHands);
                 computeStand(true, pairCard, splitHands);
                 if (pairCard != 1) {
@@ -996,18 +998,18 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
                 // possible hands.
                 int i = 0, j;
                 shoe.reset();
-                for (int split = 0; split < splitHands; split++) {
+                for (int split = 0; split < splitHands; ++split) {
                     shoe.deal(pairCard);
                     i = playerHands[i].hitHand[pairCard];
                 }
-                for (int upCard = 1; upCard <= 10; upCard++) {
+                for (int upCard = 1; upCard <= 10; ++upCard) {
                     if (shoe.cards[upCard]) {
                         shoe.deal(upCard);
                         double valueUpCard = 0,
                             pNoPair = 1 - shoe.getProbability(pairCard);
 
                         // Evaluate each possible two-card split hand.
-                        for (int card = 1; card <= 10; card++) {
+                        for (int card = 1; card <= 10; ++card) {
                             if (shoe.cards[card]) {
                                 currentHand.deal(card);
                                 PlayerHand & hand =
@@ -1116,7 +1118,7 @@ void BJPlayer::correctStandBlackjack(double bjPayoff) {
                 bjPayoff * (1 - shoe.getProbability(10));
             shoe.undeal(1);
         }
-        for (int upCard = 2; upCard < 10; upCard++) {
+        for (int upCard = 2; upCard < 10; ++upCard) {
             if (shoe.cards[upCard]) {
                 hand.valueStand[false][upCard] = bjPayoff;
             }
@@ -1134,12 +1136,12 @@ void BJPlayer::computeOverall(BJRules & rules, BJStrategy & strategy) {
     overallValue = 0;
     bool surrender = rules.getLateSurrender();
     shoe.reset();
-    for (int upCard = 1; upCard <= 10; upCard++) {
+    for (int upCard = 1; upCard <= 10; ++upCard) {
         overallValues[upCard] = 0;
         if (shoe.cards[upCard]) {
             shoe.deal(upCard);
-            for (int card1 = 1; card1 <= 10; card1++) {
-                for (int card2 = 1; card2 <= 10; card2++) {
+            for (int card1 = 1; card1 <= 10; ++card1) {
+                for (int card2 = 1; card2 <= 10; ++card2) {
                     if (shoe.cards[card1] && shoe.cards[card2] &&
                             (card1 != card2 || shoe.cards[card1] >= 2)) {
                         currentHand.reset();
@@ -1223,7 +1225,7 @@ double BJPlayer::computeSurrender(int upCard) {
 }
 
 void BJPlayer::conditionNoBlackjack() {
-    for (int i = 0; i < numHands; i++) {
+    for (int i = 0; i < numHands; ++i) {
         PlayerHand & hand = playerHands[i];
         currentHand.reset(hand.cards);
         if (currentHand.count <= 21) {
@@ -1264,7 +1266,7 @@ void BJPlayer::conditionNoBlackjack() {
             }
         }
     }
-    for (int pairCard = 1; pairCard <= 10; pairCard++) {
+    for (int pairCard = 1; pairCard <= 10; ++pairCard) {
         if (resplit[pairCard] >= 2 && shoe.totalCards[pairCard] >= 2) {
             shoe.reset();
             shoe.deal(pairCard); shoe.deal(pairCard);

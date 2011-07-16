@@ -127,7 +127,7 @@ int main() {
 
 // Get casino rule variations.
 
-    int numDecks, cards[10];
+    int numDecks, cards[11];
     bool hitSoft17,
         doubleAnyTotal,
         double9,
@@ -146,7 +146,7 @@ int main() {
     if (numDecks == 0) {
         printf("Enter number of cards of each rank (1-10): ");
         for (card = 1; card <= 10; card++) {
-            scanf("%d", &cards[card - 1]);
+            scanf("%d", &cards[card]);
         }
     }
 
@@ -230,9 +230,9 @@ int main() {
     if (numDecks > 0) {
         fprintf(file, "%d deck%s", numDecks, numDecks > 1 ? "s" : "");
     } else {
-        fprintf(file, "Shoe(%d", cards[0]);
+        fprintf(file, "Shoe(%d", cards[1]);
         for (card = 2; card <= 10; card++) {
-            fprintf(file, ", %d", cards[card - 1]);
+            fprintf(file, ", %d", cards[card]);
         }
         fprintf(file, ")");
     }

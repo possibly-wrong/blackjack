@@ -248,8 +248,7 @@ int main() {
         fprintf(file, ", no resplit");
     else if (resplitAces)
         fprintf(file, ", RSA");
-    if (usePostSplit)
-        fprintf(file, ", use post-split strategy");
+    fprintf(file, ", %s", usePostSplit ? "CDNS" : "CDZ-");
     if (lateSurrender)
         fprintf(file, ", surrender");
     fprintf(file, "\n\n");

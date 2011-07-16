@@ -474,9 +474,10 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
         this->shoe.totalCards[card] = shoe.cards[card];
     }
 
-    // Remember resplit rules when enumerating player hands.
+    // Remember maximum number of pair cards to remove when enumerating player
+    // hands.
     for (int pairCard = 1; pairCard <= 10; ++pairCard) {
-        resplit[pairCard] = rules.getResplit(pairCard);
+        maxPairCards[pairCard] = (rules.getResplit(pairCard) - 1) * 2;
     }
 
     // Enumerate all possible player hands.
@@ -508,7 +509,7 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
     // Compute overall expected values, condition individual hands on no dealer
     // blackjack, and finalize progress indicator.
     computeOverall(rules, strategy);
-    conditionNoBlackjack();
+    conditionNoBlackjack(rules);
     progress.indicate(100);
 }
 
@@ -600,7 +601,7 @@ bool BJPlayer::record(const BJHand & hand) {
         // Or if it may be a split hand; note that we don't need extra hands
         // for split aces, since hitting split aces is not allowed.
         for (int card = 2; card <= 10; ++card) {
-            int s = resplit[card];
+            int s = maxPairCards[card];
             if (hand.cards[card] < s) {
                 s = hand.cards[card];
             }
@@ -931,10 +932,10 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
 
 void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
     for (int pairCard = 1; pairCard <= 10; ++pairCard) {
-        if (resplit[pairCard] >= 2 && shoe.totalCards[pairCard] >= 2) {
+        if (rules.getResplit(pairCard) >= 2 && shoe.totalCards[pairCard] >= 2) {
 
             // Compute maximum number of split hands.
-            int maxSplitHands = resplit[pairCard];
+            int maxSplitHands = rules.getResplit(pairCard);
             if (shoe.totalCards[pairCard] < maxSplitHands) {
                 maxSplitHands = shoe.totalCards[pairCard];
             }
@@ -1153,7 +1154,8 @@ void BJPlayer::computeOverall(BJRules & rules, BJStrategy & strategy) {
                         double value;
                         BJHand testHand(hand.cards);
                         bool doubleDown = rules.getDoubleDown(testHand),
-                            split = (card1 == card2 && resplit[card1] >= 2);
+                            split = (card1 == card2 &&
+                                rules.getResplit(card1) >= 2);
                         double valueSurrender;
                         switch (strategy.getOption(testHand, upCard,
                                 doubleDown, split, surrender)) {
@@ -1224,7 +1226,7 @@ double BJPlayer::computeSurrender(int upCard) {
     return valueSurrender;
 }
 
-void BJPlayer::conditionNoBlackjack() {
+void BJPlayer::conditionNoBlackjack(BJRules & rules) {
     for (int i = 0; i < numHands; ++i) {
         PlayerHand & hand = playerHands[i];
         currentHand.reset(hand.cards);
@@ -1267,7 +1269,8 @@ void BJPlayer::conditionNoBlackjack() {
         }
     }
     for (int pairCard = 1; pairCard <= 10; ++pairCard) {
-        if (resplit[pairCard] >= 2 && shoe.totalCards[pairCard] >= 2) {
+        if (rules.getResplit(pairCard) >= 2 &&
+            shoe.totalCards[pairCard] >= 2) {
             shoe.reset();
             shoe.deal(pairCard); shoe.deal(pairCard);
             if (shoe.cards[1]) {

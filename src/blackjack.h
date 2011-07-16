@@ -278,7 +278,8 @@ public:
 
     // Create a strategy, where usePostSplit indicates whether post-split
     // strategy is allowed to differ from pre-split strategy when
-    // getOption(...) returns BJ_MAX_VALUE.
+    // getOption(...) returns BJ_MAX_VALUE.  A value of true corresponds to
+    // CDNS, false to CDZ-.
     BJStrategy(bool usePostSplit = false);
 
     // ~BJStrategy() allows appropriate destruction of objects derived from
@@ -308,6 +309,7 @@ public:
 
     // getUsePostSplit() returns true iff post-split strategy is allowed to
     // differ from pre-split strategy when getOption(...) returns BJ_MAX_VALUE.
+    // A value of true corresponds to CDNS, false to CDZ-.
     virtual bool getUsePostSplit() const;
 
 protected:
@@ -398,10 +400,10 @@ protected:
             probabilityBust[11],
             probabilityCount[5][11],
             probabilityBlackjack[11];
-    } playerHands[16373];
+    } playerHands[25941];
     BJHand currentHand;
     BJShoe shoe;
-    int resplit[11];
+    int maxPairCards[11];
     double valueSplit[11][11],
         overallValues[11],
         overallValue;
@@ -434,7 +436,7 @@ protected:
     void correctStandBlackjack(double bjPayoff);
     void computeOverall(BJRules & rules, BJStrategy & strategy);
     double computeSurrender(int upCard);
-    void conditionNoBlackjack();
+    void conditionNoBlackjack(BJRules & rules);
 };
 
 #endif // BLACKJACK_H

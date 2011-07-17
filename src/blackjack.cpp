@@ -932,179 +932,270 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
 
 void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
     for (int pairCard = 1; pairCard <= 10; ++pairCard) {
-        if (rules.getResplit(pairCard) >= 2 && shoe.totalCards[pairCard] >= 2) {
+        int maxSplitHands = rules.getResplit(pairCard);
+        if (shoe.totalCards[pairCard] < maxSplitHands) {
+            maxSplitHands = shoe.totalCards[pairCard];
+        }
+        if (maxSplitHands >= 2) {
 
-            // Compute maximum number of split hands.
-            int maxSplitHands = rules.getResplit(pairCard);
-            if (shoe.totalCards[pairCard] < maxSplitHands) {
-                maxSplitHands = shoe.totalCards[pairCard];
+            // Pre-compute EV[X;a,0] for all required removals of additional
+            // pair cards.
+            int maxRemoved = (maxSplitHands - 2) * 2;
+            if (shoe.totalCards[pairCard] < maxRemoved) {
+                maxRemoved = shoe.totalCards[pairCard];
+            }
+            for (int removed = 0; removed <= maxRemoved; ++removed) {
+                computeEVx(rules, strategy, pairCard, removed);
             }
 
-            // Compute probability of splitting exactly 2, 3, and 4 hands.
-            double pSplit[5][11];
+            // Accumulate expected value of splitting each possible number of
+            // hands.
+            for (int upCard = 1; upCard <= 10; ++upCard) {
+                valueSplit[pairCard][upCard] = 0;
+            }
             shoe.reset();
             shoe.deal(pairCard); shoe.deal(pairCard);
-            for (int upCard = 1; upCard <= 10; ++upCard) {
-                if (shoe.cards[upCard]) {
-                    shoe.deal(upCard);
-                    double n = shoe.numCards,
-                        p = shoe.cards[pairCard];
-                    if (maxSplitHands > 2) {
-                        pSplit[2][upCard] =
-                            (n - p) / n * (n - 1 - p) / (n - 1);
-                        if (maxSplitHands > 3) {
-                            pSplit[3][upCard] = pSplit[2][upCard] *
-                                2 * p / (n - 2) * (n - 2 - p) / (n - 3);
-                            pSplit[4][upCard] =
-                                1 - pSplit[2][upCard] - pSplit[3][upCard];
-                        } else {
-                            pSplit[3][upCard] = 1 - pSplit[2][upCard];
-                            pSplit[4][upCard] = 0;
-                        }
-                    } else {
-                        pSplit[2][upCard] = 1;
-                        pSplit[3][upCard] = pSplit[4][upCard] = 0;
-                    }
-
-                    // We only lose our initial wager if the dealer has
-                    // blackjack.
-                    if (upCard == 1) {
-                        valueSplit[pairCard][upCard] = shoe.getProbability(10);
-                    } else if (upCard == 10) {
-                        valueSplit[pairCard][upCard] = shoe.getProbability(1);
-                    } else {
-                        valueSplit[pairCard][upCard] = 0;
-                    }
-                    valueSplit[pairCard][upCard] *=
-                            pSplit[2][upCard] + pSplit[3][upCard] * 2 +
-                            pSplit[4][upCard] * 3;
-                    shoe.undeal(upCard);
+            for (int h = 2; h < maxSplitHands; ++h) {
+                getEVn(q(h, pairCard) * (double)h, h - 2, h - 1, pairCard);
+            }
+            for (int k = 0; k < maxSplitHands - 1; ++k) {
+                std::valarray<double> p = r(maxSplitHands, k, pairCard);
+                if (k > 0) {
+                    getEVn(p * (double)k, maxSplitHands - 2, k - 1, pairCard);
                 }
+                getEVx(p * (double)(maxSplitHands - k), maxSplitHands - 2, k,
+                    pairCard);
             }
 
-            // For each possible number of split hands, re-compute expected
-            // values with the appropriate number of pair cards removed.
-            for (int splitHands = 2; splitHands <= maxSplitHands;
-                    ++splitHands) {
-                linkHandCounts(true, pairCard, splitHands);
-                computeStand(true, pairCard, splitHands);
-                if (pairCard != 1) {
-                    computeDoubleDown(true, pairCard, splitHands);
-                    computeHit(rules, strategy, true, pairCard, splitHands);
-                }
-                currentHand.reset();
-                currentHand.deal(pairCard);
-
-                // Remove split pair cards for weighting expected values of
-                // possible hands.
-                int i = 0, j;
-                shoe.reset();
-                for (int split = 0; split < splitHands; ++split) {
-                    shoe.deal(pairCard);
-                    i = playerHands[i].hitHand[pairCard];
-                }
-                for (int upCard = 1; upCard <= 10; ++upCard) {
-                    if (shoe.cards[upCard]) {
-                        shoe.deal(upCard);
-                        double valueUpCard = 0,
-                            pNoPair = 1 - shoe.getProbability(pairCard);
-
-                        // Evaluate each possible two-card split hand.
-                        for (int card = 1; card <= 10; ++card) {
-                            if (shoe.cards[card]) {
-                                currentHand.deal(card);
-                                PlayerHand & hand =
-                                    playerHands[playerHands[i].hitHand[card]];
-                                double value, testValue;
-                                if (pairCard == 1) {
-                                    value = hand.valueStand[true][upCard];
-                                } else {
-                                    bool doubleDown =
-                                        rules.getDoubleAfterSplit(currentHand);
-                                    switch (strategy.getOption(currentHand,
-                                            upCard, doubleDown, false, false)){
-                                    case BJ_MAX_VALUE :
-                                        if (usePostSplit) {
-                                            value = hand.
-                                                    valueStand[true][upCard];
-                                            if (value < hand.
-                                                    valueHit[true][upCard]) {
-                                                value = hand.
-                                                        valueHit[true][upCard];
-                                            }
-                                            if (doubleDown) {
-                                                if (value < hand.
-                                                    valueDoubleDown[true]
-                                                            [upCard]) {
-                                                        value = hand.
-                                                        valueDoubleDown[true]
-                                                            [upCard];
-                                                }
-                                            }
-                                        } else {
-
-                                            // Again, use the playing option
-                                            // that maximizes expected value
-                                            // for the non-split hand.
-                                            j = findHand(currentHand);
-                                            testValue = playerHands[j].
-                                                    valueStand[false][upCard];
-                                            value = hand.
-                                                    valueStand[true][upCard];
-                                            if (testValue < playerHands[j].
-                                                    valueHit[false][upCard]) {
-                                                testValue = playerHands[j].
-                                                    valueHit[false][upCard];
-                                                value = hand.
-                                                        valueHit[true][upCard];
-                                            }
-                                            if (doubleDown) {
-                                                if (testValue < playerHands[j].
-                                                    valueDoubleDown[false]
-                                                            [upCard]) {
-                                                    value = hand.
-                                                        valueDoubleDown[true]
-                                                            [upCard];
-                                                }
-                                            }
-                                        }
-                                        break;
-                                    case BJ_STAND :
-                                        value = hand.valueStand[true][upCard];
-                                        break;
-                                    case BJ_HIT :
-                                        value = hand.valueHit[true][upCard];
-                                        break;
-                                    case BJ_DOUBLE_DOWN :
-                                        value =
-                                            hand.valueDoubleDown[true][upCard];
-                                        break;
-                                    default :
-                                        value = 0;
-                                    }
-                                }
-
-                                // If further resplitting is allowed, condition
-                                // on NOT drawing an additional pair.
-                                double p = shoe.getProbability(card);
-                                if (splitHands < maxSplitHands && pNoPair > 0) {
-                                    p /= pNoPair;
-                                }
-                                if (card != pairCard
-                                        || splitHands == maxSplitHands) {
-                                    valueUpCard += value * p;
-                                }
-                                currentHand.undeal(card);
-                            }
+            // We only lose our initial wager if the dealer has blackjack.
+            for (int upCard = 1; upCard <= 10; upCard *= 10) {
+                int holeCard = 11 - upCard;
+                if (shoe.cards[upCard] && shoe.cards[holeCard]) {
+                    shoe.deal(upCard);
+                    double pBlackjack = shoe.getProbability(holeCard);
+                    shoe.deal(holeCard);
+                    double p2, p3, p4,
+                        n = shoe.numCards,
+                        p = shoe.cards[pairCard];
+                    if (maxSplitHands > 2) {
+                        p2 = (n - p) / n * (n - p - 1) / (n - 1);
+                        if (maxSplitHands > 3) {
+                            p3 = 2 * p / n * (n - p) / (n - 1) * (n - p - 1) /
+                                (n - 2) * (n - p - 2) / (n - 3);
+                            p4 = 1 - p2 - p3;
+                        } else {
+                            p3 = 1 - p2;
+                            p4 = 0;
                         }
-                        valueSplit[pairCard][upCard] += valueUpCard *
-                            pSplit[splitHands][upCard] * splitHands;
-                        shoe.undeal(upCard);
+                    } else {
+                        p2 = 1;
+                        p3 = p4 = 0;
                     }
+                    double expectedHands = p2 * 2 + p3 * 3 + p4 * 4;
+                    valueSplit[pairCard][upCard] +=
+                        (expectedHands - 1) * pBlackjack;
+                    shoe.undeal(holeCard);
+                    shoe.undeal(upCard);
                 }
             }
         }
     }
+}
+
+void BJPlayer::computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
+                          int removed) {
+
+    // Re-compute expected values with the given number of additional pair
+    // cards removed.
+    int splitHands = removed + 2;
+    linkHandCounts(true, pairCard, splitHands);
+    computeStand(true, pairCard, splitHands);
+    if (pairCard != 1) {
+        computeDoubleDown(true, pairCard, splitHands);
+        computeHit(rules, strategy, true, pairCard, splitHands);
+    }
+    currentHand.reset();
+    currentHand.deal(pairCard);
+
+    // Remove split pair cards for weighting expected values of possible hands.
+    int i = 0, j;
+    shoe.reset();
+    for (int split = 0; split < splitHands; ++split) {
+        shoe.deal(pairCard);
+        i = playerHands[i].hitHand[pairCard];
+    }
+    for (int upCard = 1; upCard <= 10; ++upCard) {
+        valueSplitX[removed][pairCard][upCard] = 0;
+        valueSplitP[removed][pairCard][upCard] = 0;
+        if (shoe.cards[upCard]) {
+            shoe.deal(upCard);
+
+            // Evaluate each possible two-card hand, playing (not resplitting)
+            // any new pair.
+            for (int card = 1; card <= 10; ++card) {
+                if (shoe.cards[card]) {
+                    currentHand.deal(card);
+                    PlayerHand & hand =
+                        playerHands[playerHands[i].hitHand[card]];
+                    double value, testValue;
+                    if (pairCard == 1) {
+                        value = hand.valueStand[true][upCard];
+                    } else {
+                        bool doubleDown =
+                            rules.getDoubleAfterSplit(currentHand);
+                        switch (strategy.getOption(currentHand,
+                                upCard, doubleDown, false, false)){
+                        case BJ_MAX_VALUE :
+                            if (usePostSplit) {
+                                value = hand.valueStand[true][upCard];
+                                if (value < hand.valueHit[true][upCard]) {
+                                    value = hand.valueHit[true][upCard];
+                                }
+                                if (doubleDown) {
+                                    if (value < hand.
+                                        valueDoubleDown[true][upCard]) {
+                                        value =
+                                            hand.valueDoubleDown[true][upCard];
+                                    }
+                                }
+                            } else {
+
+                                // Again, use the playing option that maximizes
+                                // expected value for the non-split hand.
+                                j = findHand(currentHand);
+                                testValue = playerHands[j].
+                                        valueStand[false][upCard];
+                                value = hand.valueStand[true][upCard];
+                                if (testValue < playerHands[j].
+                                        valueHit[false][upCard]) {
+                                    testValue = playerHands[j].
+                                        valueHit[false][upCard];
+                                    value = hand.valueHit[true][upCard];
+                                }
+                                if (doubleDown) {
+                                    if (testValue < playerHands[j].
+                                        valueDoubleDown[false][upCard]) {
+                                        value = hand.
+                                            valueDoubleDown[true][upCard];
+                                    }
+                                }
+                            }
+                            break;
+                        case BJ_STAND :
+                            value = hand.valueStand[true][upCard];
+                            break;
+                        case BJ_HIT :
+                            value = hand.valueHit[true][upCard];
+                            break;
+                        case BJ_DOUBLE_DOWN :
+                            value = hand.valueDoubleDown[true][upCard];
+                            break;
+                        default :
+                            value = 0;
+                        }
+                    }
+
+                    // Accumulate expected value for this two-card hand.
+                    valueSplitX[removed][pairCard][upCard] +=
+                        value * shoe.getProbability(card);
+                    if (card == pairCard) {
+                        valueSplitP[removed][pairCard][upCard] = value;
+                    }
+                    currentHand.undeal(card);
+                }
+            }
+            shoe.undeal(upCard);
+        }
+    }
+}
+
+std::valarray<double> BJPlayer::q(int h, int pairCard) {
+
+    // Multiply by the (h - 1)-st Catalan number; this simpler expression is
+    // only valid for 1 < h < 4.
+    std::valarray<double> v(h - 1.0, 11);
+    for (int upCard = 1; upCard <= 10; ++upCard) {
+        if (shoe.cards[upCard]) {
+            shoe.deal(upCard);
+            double n = shoe.numCards,
+                p = shoe.cards[pairCard],
+                np = n - p;
+            for (int i = 0; i < h - 2; ++i, --p, --n) {
+                v[upCard] *= p / n;
+            }
+            for (int i = 0; i < h; ++i, --np, --n) {
+                v[upCard] *= np / n;
+            }
+            shoe.undeal(upCard);
+        } else {
+            v[upCard] = 0;
+        }
+    }
+    return v;
+}
+
+std::valarray<double> BJPlayer::r(int maxSplitHands, int k, int pairCard) {
+
+    // Multiply by (1 - k / (n - 1)) * C(n + k - 2, k); this simpler expression
+    // is only valid for maxSplitHands <= 4.
+    double m = 1;
+    if (maxSplitHands == 4 && k > 0) {
+        m = 2;
+    }
+    std::valarray<double> v(m, 11);
+    for (int upCard = 1; upCard <= 10; ++upCard) {
+        if (shoe.cards[upCard]) {
+            shoe.deal(upCard);
+            double n = shoe.numCards,
+                p = shoe.cards[pairCard],
+                np = n - p;
+            for (int i = 0; i < maxSplitHands - 2; ++i, --p, --n) {
+                v[upCard] *= p / n;
+            }
+            for (int i = 0; i < k; ++i, --np, --n) {
+                v[upCard] *= np / n;
+            }
+            shoe.undeal(upCard);
+        } else {
+            v[upCard] = 0;
+        }
+    }
+    return v;
+}
+
+void BJPlayer::getEVx(std::valarray<double> p, int pairRemoved,
+                      int nonPairRemoved, int pairCard) {
+    if (nonPairRemoved == 0) {
+        for (int upCard = 1; upCard <= 10; ++upCard) {
+            valueSplit[pairCard][upCard] +=
+                p[upCard] * valueSplitX[pairRemoved][pairCard][upCard];
+        }
+        return;
+    }
+    std::valarray<double> v((double)(shoe.cards[pairCard] - pairRemoved), 11);
+    v[pairCard] -= 1;
+    v /= shoe.numCards - pairRemoved - nonPairRemoved;
+    getEVx(p / (1.0 - v), pairRemoved, nonPairRemoved - 1, pairCard);
+    getEVx(p * v / (v - 1.0), pairRemoved + 1, nonPairRemoved - 1, pairCard);
+}
+
+void BJPlayer::getEVn(std::valarray<double> p, int pairRemoved,
+                      int nonPairRemoved, int pairCard) {
+    std::valarray<double> v((double)(shoe.cards[pairCard] - pairRemoved), 11);
+    v[pairCard] -= 1;
+    if (nonPairRemoved == 0) {
+        v /= shoe.numCards - 1 - pairRemoved - nonPairRemoved;
+        p /= 1.0 - v;
+        for (int upCard = 1; upCard <= 10; ++upCard) {
+            valueSplit[pairCard][upCard] +=
+                p[upCard] * (valueSplitX[pairRemoved][pairCard][upCard] -
+                    v[upCard] * valueSplitP[pairRemoved][pairCard][upCard]);
+        }
+        return;
+    }
+    v /= shoe.numCards - pairRemoved - nonPairRemoved;
+    getEVn(p / (1.0 - v), pairRemoved, nonPairRemoved - 1, pairCard);
+    getEVn(p * v / (v - 1.0), pairRemoved + 1, nonPairRemoved - 1, pairCard);
 }
 
 void BJPlayer::correctStandBlackjack(double bjPayoff) {

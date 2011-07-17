@@ -933,7 +933,7 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
 void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
     for (int pairCard = 1; pairCard <= 10; ++pairCard) {
         int maxSplitHands = rules.getResplit(pairCard);
-        if (shoe.totalCards[pairCard] < maxSplitHands) {
+        if (maxSplitHands > shoe.totalCards[pairCard]) {
             maxSplitHands = shoe.totalCards[pairCard];
         }
         if (maxSplitHands >= 2) {
@@ -941,8 +941,8 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
             // Pre-compute EV[X;a,0] for all required removals of additional
             // pair cards.
             int maxRemoved = (maxSplitHands - 2) * 2;
-            if (shoe.totalCards[pairCard] < maxRemoved) {
-                maxRemoved = shoe.totalCards[pairCard];
+            if (maxRemoved > shoe.totalCards[pairCard] - 2) {
+                maxRemoved = shoe.totalCards[pairCard] - 2;
             }
             for (int removed = 0; removed <= maxRemoved; ++removed) {
                 computeEVx(rules, strategy, pairCard, removed);

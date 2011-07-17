@@ -8,6 +8,8 @@
 #ifndef BLACKJACK_H
 #define BLACKJACK_H
 
+#include <valarray>
+
 // Return values for BJStrategy::getOption() (see below)
 #define BJ_MAX_VALUE    0
 #define BJ_STAND        1
@@ -404,7 +406,9 @@ protected:
     BJHand currentHand;
     BJShoe shoe;
     int maxPairCards[11];
-    double valueSplit[11][11],
+    double valueSplitX[5][11][11],
+        valueSplitP[5][11][11],
+        valueSplit[11][11],
         overallValues[11],
         overallValue;
 
@@ -433,6 +437,15 @@ protected:
                          int splitHands);
 
     void computeSplit(BJRules & rules, BJStrategy & strategy);
+    void computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
+                    int removed);
+    std::valarray<double> q(int h, int pairCard);
+    std::valarray<double> r(int maxSplitHands, int k, int pairCard);
+    void getEVx(std::valarray<double> p, int pairRemoved, int nonPairRemoved,
+                int pairCard);
+    void getEVn(std::valarray<double> p, int pairRemoved, int nonPairRemoved,
+                int pairCard);
+
     void correctStandBlackjack(double bjPayoff);
     void computeOverall(BJRules & rules, BJStrategy & strategy);
     double computeSurrender(int upCard);

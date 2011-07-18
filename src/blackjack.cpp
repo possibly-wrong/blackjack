@@ -1183,8 +1183,8 @@ void BJPlayer::getEVn(std::valarray<double> p, int pairRemoved,
                       int nonPairRemoved, int pairCard) {
     std::valarray<double> v((double)(shoe.cards[pairCard] - pairRemoved), 11);
     v[pairCard] -= 1;
+    v /= shoe.numCards - 1 - pairRemoved - nonPairRemoved;
     if (nonPairRemoved == 0) {
-        v /= shoe.numCards - 1 - pairRemoved - nonPairRemoved;
         p /= 1.0 - v;
         for (int upCard = 1; upCard <= 10; ++upCard) {
             valueSplit[pairCard][upCard] +=
@@ -1193,7 +1193,6 @@ void BJPlayer::getEVn(std::valarray<double> p, int pairRemoved,
         }
         return;
     }
-    v /= shoe.numCards - pairRemoved - nonPairRemoved;
     getEVn(p / (1.0 - v), pairRemoved, nonPairRemoved - 1, pairCard);
     getEVn(p * v / (v - 1.0), pairRemoved + 1, nonPairRemoved - 1, pairCard);
 }

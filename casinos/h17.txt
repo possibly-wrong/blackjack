@@ -79,7 +79,7 @@ Resplit_Allowed = 1
 #  0 : Resplitting aces is not allowed.
 #
 
-Resplit_Aces_Allowed = 1
+Resplit_Aces_Allowed = 0
 
 ###########################################################
 #

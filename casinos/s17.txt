@@ -69,7 +69,7 @@ Double_Down_After_Split = 1
 #  0 : Resplitting pairs is not allowed.
 #
 
-Resplit_Allowed = 1
+Resplit_Allowed = 0
 
 ###########################################################
 #

@@ -280,8 +280,8 @@ public:
 
     // Create a strategy, where usePostSplit indicates whether post-split
     // strategy is allowed to differ from pre-split strategy when
-    // getOption(...) returns BJ_MAX_VALUE.  A value of true corresponds to
-    // CDNS, false to CDZ-.
+    // getOption(...) returns BJ_MAX_VALUE.  A value of false corresponds to
+    // CDZ-, true to CDP.
     BJStrategy(bool usePostSplit = false);
 
     // ~BJStrategy() allows appropriate destruction of objects derived from
@@ -311,7 +311,7 @@ public:
 
     // getUsePostSplit() returns true iff post-split strategy is allowed to
     // differ from pre-split strategy when getOption(...) returns BJ_MAX_VALUE.
-    // A value of true corresponds to CDNS, false to CDZ-.
+    // A value of false corresponds to CDZ-, false to CDP.
     virtual bool getUsePostSplit() const;
 
 protected:

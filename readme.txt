@@ -1,5 +1,5 @@
 Blackjack Game and Basic Strategy Calculator
-Version 5.4
+Version 5.5
 Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
@@ -144,15 +144,20 @@ are to be entered as 1, not 11.
 
 *** Revision History ***
 
+5.5  The algorithm for computing expected values for pair splitting has
+     been completely reworked-- again.  Expected values are now exact
+     for both CDZ- and CDP for splitting up to a maximum of 4 hands.
+
 5.4  Several minor changes to the computation of dealer probabilities
      yield significant improvement in speed.
 
 5.3  The engine interface now has options for specifying whether post-
-     split strategy differs from pre-split, specifying the payoff for
-     blackjack, and specifying "mixed" strategies that combine fixed
-     stand/hit/etc. decisions with maximizing expected value.  Divide by
-     zero bugs for small shoe sizes have also been fixed, as well as
-     some code clean-up to improve readability.
+     split strategy differs from pre-split (i.e., CDZ- vs. CDP),
+     specifying the payoff for blackjack, and specifying "mixed"
+     strategies that combine fixed stand/hit/etc. decisions with
+     maximizing expected value.  Divide by zero bugs for small shoe
+     sizes have also been fixed, as well as some code clean-up to
+     improve readability.
 
 5.2  Additional practice modes (-1, -2) plays an entire shoe, but
      recompute expected value and/or optimal strategy before each hand.

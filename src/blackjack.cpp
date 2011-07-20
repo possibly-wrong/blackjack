@@ -474,8 +474,8 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
         this->shoe.totalCards[card] = shoe.cards[card];
     }
 
-    // Remember maximum number of pair cards to remove when enumerating player
-    // hands.
+    // Remember maximum number of additional pair cards to remove when
+    // enumerating player hands.
     for (int pairCard = 1; pairCard <= 10; ++pairCard) {
         maxPairCards[pairCard] = (rules.getResplit(pairCard) - 1) * 2;
     }
@@ -931,6 +931,10 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
 }
 
 void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
+
+    // Compute expected values for splitting each possible pair card. See
+    // http://sites.google.com/site/erfarmer/downloads/blackjack_split.pdf for
+    // a description of the algorithm.
     for (int pairCard = 1; pairCard <= 10; ++pairCard) {
         int maxSplitHands = rules.getResplit(pairCard);
         if (maxSplitHands > shoe.totalCards[pairCard]) {
@@ -938,8 +942,8 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
         }
         if (maxSplitHands >= 2) {
 
-            // Pre-compute EV[X;a,0] for all required removals of additional
-            // pair cards.
+            // Pre-compute EV[X;a,0] and EV[P;a,0] for all required removals of
+            // additional pair cards.
             int maxRemoved = (maxSplitHands - 2) * 2;
             if (maxRemoved > shoe.totalCards[pairCard] - 2) {
                 maxRemoved = shoe.totalCards[pairCard] - 2;
@@ -955,9 +959,16 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
             }
             shoe.reset();
             shoe.deal(pairCard); shoe.deal(pairCard);
+
+            // Evaluate "stopping early," splitting less than the maximum
+            // number of hands.
             for (int h = 2; h < maxSplitHands; ++h) {
                 getEVn(q(h, pairCard) * (double)h, h - 2, h - 1, pairCard);
             }
+
+            // Evaluate splitting the maximum number of hands, indexed by the
+            // number k of hands completed (i.e., drawing a non-pair card)
+            // before drawing additional pair cards to reach the maximum.
             for (int k = 0; k < maxSplitHands - 1; ++k) {
                 std::valarray<double> p = r(maxSplitHands, k, pairCard);
                 if (k > 0) {
@@ -1005,8 +1016,8 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
 void BJPlayer::computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
                           int removed) {
 
-    // Re-compute expected values with the given number of additional pair
-    // cards removed.
+    // Re-compute expected values for all player hands, but with the given
+    // number of additional pair cards removed.
     int splitHands = removed + 2;
     linkHandCounts(true, pairCard, splitHands);
     computeStand(true, pairCard, splitHands);
@@ -1095,7 +1106,8 @@ void BJPlayer::computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
                         }
                     }
 
-                    // Accumulate expected value for this two-card hand.
+                    // Accumulate EV[X;a,0] and EV[P;a,0] for this two-card
+                    // hand.
                     valueSplitX[removed][pairCard][upCard] +=
                         value * shoe.getProbability(card);
                     if (card == pairCard) {
@@ -1111,12 +1123,15 @@ void BJPlayer::computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
 
 std::valarray<double> BJPlayer::q(int h, int pairCard) {
 
-    // Multiply by the (h - 1)-st Catalan number; this simpler expression is
-    // only valid for 1 < h < 4.
+    // Compute the probability of splitting exactly h hands.  The number of
+    // arrangements of cards is the (h - 1)-st Catalan number; this simpler
+    // expression C(h - 1) == h - 1 is only valid for 1 < h < 4.
     std::valarray<double> v(h - 1.0, 11);
     for (int upCard = 1; upCard <= 10; ++upCard) {
         if (shoe.cards[upCard]) {
             shoe.deal(upCard);
+
+            // Compute the (constant) probability of each arrangement.
             double n = shoe.numCards,
                 p = shoe.cards[pairCard],
                 np = n - p;
@@ -1136,8 +1151,13 @@ std::valarray<double> BJPlayer::q(int h, int pairCard) {
 
 std::valarray<double> BJPlayer::r(int maxSplitHands, int k, int pairCard) {
 
-    // Multiply by (1 - k / (n - 1)) * C(n + k - 2, k); this simpler expression
-    // is only valid for maxSplitHands <= 4.
+    // Compute the probability of splitting the maximum number of hands,
+    // completing k of them (i.e., drawing a non-pair card) before drawing
+    // additional pair cards to reach the maximum.
+    //
+    // The number m of arrangements of cards is:
+    // (1 - k / (n - 1)) * C(n + k - 2, k); this simpler expression for m is
+    // only valid for maxSplitHands <= 4.
     double m = 1;
     if (maxSplitHands == 4 && k > 0) {
         m = 2;
@@ -1146,6 +1166,8 @@ std::valarray<double> BJPlayer::r(int maxSplitHands, int k, int pairCard) {
     for (int upCard = 1; upCard <= 10; ++upCard) {
         if (shoe.cards[upCard]) {
             shoe.deal(upCard);
+
+            // Compute the (constant) probability of each arrangement.
             double n = shoe.numCards,
                 p = shoe.cards[pairCard],
                 np = n - p;
@@ -1172,6 +1194,9 @@ void BJPlayer::getEVx(std::valarray<double> p, int pairRemoved,
         }
         return;
     }
+
+    // Recursively evaluate EV[X;a,b] in terms of EV[X;a,b-1] and
+    // EV[X;a+1,b-1].
     std::valarray<double> v((double)(shoe.cards[pairCard] - pairRemoved), 11);
     v[pairCard] -= 1;
     v /= shoe.numCards - pairRemoved - nonPairRemoved;
@@ -1185,6 +1210,8 @@ void BJPlayer::getEVn(std::valarray<double> p, int pairRemoved,
     v[pairCard] -= 1;
     v /= shoe.numCards - 1 - pairRemoved - nonPairRemoved;
     if (nonPairRemoved == 0) {
+
+        // Evaluate EV[N;a,0] in terms of EV[X;a,0] and EV[P;a,0].
         p /= 1.0 - v;
         for (int upCard = 1; upCard <= 10; ++upCard) {
             valueSplit[pairCard][upCard] +=
@@ -1193,6 +1220,9 @@ void BJPlayer::getEVn(std::valarray<double> p, int pairRemoved,
         }
         return;
     }
+
+    // Recursively evaluate EV[N;a,b] in terms of EV[N;a,b-1] and
+    // EV[N;a+1,b-1].
     getEVn(p / (1.0 - v), pairRemoved, nonPairRemoved - 1, pairCard);
     getEVn(p * v / (v - 1.0), pairRemoved + 1, nonPairRemoved - 1, pairCard);
 }

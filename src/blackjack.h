@@ -229,7 +229,7 @@ public:
     BJRules(bool hitSoft17 = false, bool doubleAnyTotal = true,
         bool double9 = true, bool doubleSoft = true,
         bool doubleAfterHit = false, bool doubleAfterSplit = true,
-        bool resplit = false, bool resplitAces = false,
+        bool resplit = true, bool resplitAces = false,
         bool lateSurrender = false, double bjPayoff = 1.5);
 
     // ~BJRules() allows appropriate destruction of objects derived from

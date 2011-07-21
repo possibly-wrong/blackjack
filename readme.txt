@@ -1,5 +1,5 @@
 Blackjack Game and Basic Strategy Calculator
-Version 5.5
+Version 6.0
 Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
@@ -38,6 +38,8 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
     *** Blackjack ***
 
+Press Esc at any time to quit.
+
 In Blackjack, you can play any of various styles of casino blackjack,
 with a number of decks and rule variations of your choosing.  As you
 play, exact probabilities of outcomes of the dealer's hand and exact
@@ -49,11 +51,13 @@ in the distribution, with comments to explain how the casino variations
 are specified.
 
 Note that the "counting" practice modes, -1 and -2, will cause the
-expected value to be recomputed and displayed before each hand.
+overall expected value to be recomputed and displayed before each hand.
 Practice mode -2 computes the current expected value using "full shoe"
 composition-dependent basic strategy; practice mode -1 computes the
 expected value using the optimal composition-dependent strategy for the
-current shoe.
+current shoe.  (More precisely, in all cases, the strategy is CDZ-,
+where the optimal strategy for non-split hands is applied to post-split
+hands as well.)
 
 Once basic strategy for the selected casino has been computed, you are
 ready to begin playing.  Press the F1 key at any time to toggle the help
@@ -96,6 +100,12 @@ Press Ctrl-C at any time to quit.
 When you run the Basic Strategy Calculator, you must first enter the
 casino rule variations, similar to those specified in the data files for
 the Blackjack game (see above).
+
+There are two additional options not available in the game.  The first
+is the playing strategy for split hands, which may be allowed to differ
+from "pre-split" strategy (CDP) or not (CDZ-, as in the game).  The
+second additional option is the payoff for blackjack, which is normally
+1.5 (3:2).
 
 Once basic strategy for the selected rule variations has been computed,
 enter the name of a file in which to save the basic strategy table.
@@ -144,7 +154,7 @@ are to be entered as 1, not 11.
 
 *** Revision History ***
 
-5.5  The algorithm for computing expected values for pair splitting has
+6.0  The algorithm for computing expected values for pair splitting has
      been completely reworked-- again.  Expected values are now exact
      for both CDZ- and CDP for splitting up to a maximum of 4 hands.
 

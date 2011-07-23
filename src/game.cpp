@@ -509,7 +509,7 @@ int main() {
 
     // Display title and license notice.
     clear(screen);
-    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 6.0");
+    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 6.1");
     textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2011 Eric Farmer");
     textprintf_centre(screen, font, 400, 124, WHITE, "Original card images by Oliver Xymoron");
     textprintf_centre(screen, font, 400, 132, WHITE, "Written using the Allegro Game Programming Library");

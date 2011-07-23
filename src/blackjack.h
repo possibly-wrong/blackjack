@@ -278,11 +278,15 @@ protected:
 class BJStrategy {
 public:
 
-    // Create a strategy, where usePostSplit indicates whether post-split
-    // strategy is allowed to differ from pre-split strategy when
-    // getOption(...) returns BJ_MAX_VALUE.  A value of false corresponds to
-    // CDZ-, true to CDP.
-    BJStrategy(bool usePostSplit = false);
+    // Create a strategy, where useCDZ(-) and useCDP1 indicate the post-split
+    // strategy to use when getOption(...) returns BJ_MAX_VALUE:
+    //
+    // useCDZ , useCDP1 => strategy
+    // ==================================================================
+    //  true      N/A      CDZ- (use pre-split strategy)
+    // false     true      CDP1 (use post-split with 1 pair card removed)
+    // false     false     CDP  (use post-split and # pair cards removed)
+    BJStrategy(bool useCDZ = true, bool useCDP1 = true);
 
     // ~BJStrategy() allows appropriate destruction of objects derived from
     // BJStrategy.
@@ -309,13 +313,20 @@ public:
     virtual int getOption(const BJHand & hand, int upCard, bool doubleDown,
                           bool split, bool surrender);
 
-    // getUsePostSplit() returns true iff post-split strategy is allowed to
-    // differ from pre-split strategy when getOption(...) returns BJ_MAX_VALUE.
-    // A value of false corresponds to CDZ-, false to CDP.
-    virtual bool getUsePostSplit() const;
+    // getUseCDZ() and getUseCDP1() return true/false indicating the post-split
+    // strategy to use when getOption(...) returns BJ_MAX_VALUE:
+    //
+    // useCDZ , useCDP1 => strategy
+    // ==================================================================
+    //  true      N/A      CDZ- (use pre-split strategy)
+    // false     true      CDP1 (use post-split with 1 pair card removed)
+    // false     false     CDP  (use post-split and # pair cards removed)
+    virtual bool getUseCDZ() const;
+    virtual bool getUseCDP1() const;
 
 protected:
-    bool usePostSplit;
+    bool useCDZ;
+    bool useCDP1;
 };
 
 // The BJProgress interface allows some indication of progress of the creation
@@ -394,7 +405,8 @@ protected:
     struct PlayerHand {
         int cards[11],
             hitHand[11],
-            nextHand;
+            nextHand,
+            option[11];
         double valueStand[2][11],
             valueHit[2][11],
             valueDoubleDown[2][11],

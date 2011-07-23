@@ -416,8 +416,9 @@ double BJRules::getBlackjackPayoff() const {
 // BJStrategy
 //
 
-BJStrategy::BJStrategy(bool usePostSplit) :
-    usePostSplit(usePostSplit) {
+BJStrategy::BJStrategy(bool useCDZ, bool useCDP1) :
+    useCDZ(useCDZ),
+    useCDP1(useCDP1) {
     // empty
 }
 
@@ -430,8 +431,12 @@ int BJStrategy::getOption(const BJHand & hand, int upCard, bool doubleDown,
     return BJ_MAX_VALUE;
 }
 
-bool BJStrategy::getUsePostSplit() const {
-    return usePostSplit;
+bool BJStrategy::getUseCDZ() const {
+    return useCDZ;
+}
+
+bool BJStrategy::getUseCDP1() const {
+    return useCDP1;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -465,7 +470,8 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
     // Forget about any cards already dealt from the shoe, so shoe.reset(hand)
     // will work.
     pStrategy = &strategy;
-    usePostSplit = strategy.getUsePostSplit();
+    useCDZ = strategy.getUseCDZ();
+    useCDP1 = strategy.getUseCDP1();
     this->shoe = shoe;
     numHands = 0;
     for (int card = 1; card <= 10; ++card) {
@@ -864,26 +870,11 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
                             switch (strategy.getOption(currentHand, upCard,
                                     doubleDown, false, false)) {
                             case BJ_MAX_VALUE :
-                                if (usePostSplit) {
-                                    value = hitHand.valueStand[split][upCard];
-                                    if (value < hitHand.
-                                            valueHit[split][upCard]) {
-                                        value = hitHand.
-                                                valueHit[split][upCard];
-                                    }
-                                    if (doubleDown) {
-                                        if (value < hitHand.
-                                                valueDoubleDown[split][upCard]) {
-                                            value = hitHand.
-                                                valueDoubleDown[split][upCard];
-                                        }
-                                    }
-                                } else {
+                                j = findHand(currentHand);
+                                if (useCDZ) {
 
-                                    // To be consistent with a "fixed" playing
-                                    // strategy, use the option maximizing
+                                    // For CDZ-, use the option maximizing
                                     // expected value for the non-split hand.
-                                    j = findHand(currentHand);
                                     testValue = playerHands[j].
                                             valueStand[false][upCard];
                                     value = hitHand.valueStand[split][upCard];
@@ -900,6 +891,50 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
                                             value = hitHand.
                                                 valueDoubleDown[split][upCard];
                                         }
+                                    }
+                                } else if (useCDP1 && splitHands > 2) {
+
+                                    // For CDP1, use the previously-computed
+                                    // optimal strategy with 1 additional pair
+                                    // card removed (i.e., splitHands == 2).
+                                    switch (playerHands[j].option[upCard]) {
+                                    case BJ_STAND :
+                                        value = hitHand.valueStand[split][upCard];
+                                        break;
+                                    case BJ_HIT :
+                                        value = hitHand.valueHit[split][upCard];
+                                        break;
+                                    case BJ_DOUBLE_DOWN :
+                                        value = hitHand.valueDoubleDown[split][upCard];
+                                        break;
+                                    default :
+                                        value = 0;
+                                    }
+                                } else {
+
+                                    // For CDP, use the optimal strategy for
+                                    // the current number of additional pair
+                                    // cards removed.
+                                    value = hitHand.valueStand[split][upCard];
+                                    int option = BJ_STAND;
+                                    if (value < hitHand.
+                                            valueHit[split][upCard]) {
+                                        value = hitHand.
+                                                valueHit[split][upCard];
+                                        option = BJ_HIT;
+                                    }
+                                    if (doubleDown) {
+                                        if (value < hitHand.
+                                                valueDoubleDown[split][upCard]) {
+                                            value = hitHand.
+                                                valueDoubleDown[split][upCard];
+                                            option = BJ_DOUBLE_DOWN;
+                                        }
+                                    }
+
+                                    // Remember this strategy for CDP1.
+                                    if (useCDP1 && splitHands == 2) {
+                                        playerHands[j].option[upCard] = option;
                                     }
                                 }
                                 break;
@@ -1057,23 +1092,12 @@ void BJPlayer::computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
                         switch (strategy.getOption(currentHand,
                                 upCard, doubleDown, false, false)){
                         case BJ_MAX_VALUE :
-                            if (usePostSplit) {
-                                value = hand.valueStand[true][upCard];
-                                if (value < hand.valueHit[true][upCard]) {
-                                    value = hand.valueHit[true][upCard];
-                                }
-                                if (doubleDown) {
-                                    if (value < hand.
-                                        valueDoubleDown[true][upCard]) {
-                                        value =
-                                            hand.valueDoubleDown[true][upCard];
-                                    }
-                                }
-                            } else {
+                            j = findHand(currentHand);
+                            if (useCDZ) {
 
-                                // Again, use the playing option that maximizes
-                                // expected value for the non-split hand.
-                                j = findHand(currentHand);
+                                // Again, for CDZ-, use the playing option that
+                                // maximizes expected value for the non-split
+                                // hand.
                                 testValue = playerHands[j].
                                         valueStand[false][upCard];
                                 value = hand.valueStand[true][upCard];
@@ -1089,6 +1113,48 @@ void BJPlayer::computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
                                         value = hand.
                                             valueDoubleDown[true][upCard];
                                     }
+                                }
+                            } else if (useCDP1 && removed > 0) {
+
+                                // For CDP1, use the previously-computed
+                                // optimal strategy with 1 additional pair
+                                // card removed (i.e., removed == 0).
+                                switch (playerHands[j].option[upCard]) {
+                                case BJ_STAND :
+                                    value = hand.valueStand[true][upCard];
+                                    break;
+                                case BJ_HIT :
+                                    value = hand.valueHit[true][upCard];
+                                    break;
+                                case BJ_DOUBLE_DOWN :
+                                    value = hand.valueDoubleDown[true][upCard];
+                                    break;
+                                default :
+                                    value = 0;
+                                }
+                            } else {
+
+                                // For CDP, use the optimal strategy for
+                                // the current number of additional pair
+                                // cards removed.
+                                value = hand.valueStand[true][upCard];
+                                int option = BJ_STAND;
+                                if (value < hand.valueHit[true][upCard]) {
+                                    value = hand.valueHit[true][upCard];
+                                    option = BJ_HIT;
+                                }
+                                if (doubleDown) {
+                                    if (value < hand.
+                                        valueDoubleDown[true][upCard]) {
+                                        value =
+                                            hand.valueDoubleDown[true][upCard];
+                                        option = BJ_DOUBLE_DOWN;
+                                    }
+                                }
+
+                                // Remember this strategy for CDP1.
+                                if (removed == 0) {
+                                    playerHands[j].option[upCard] = option;
                                 }
                             }
                             break;

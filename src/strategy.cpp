@@ -117,7 +117,7 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Basic Strategy Calculator version 6.0\n");
+    printf("Blackjack Basic Strategy Calculator version 6.1\n");
     printf("Copyright (C) 2011 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
@@ -136,7 +136,8 @@ int main() {
         doubleAfterSplit,
         resplit,
         resplitAces,
-        usePostSplit,
+        useCDZ,
+        useCDP1,
         lateSurrender;
     double bjPayoff;
 
@@ -189,9 +190,15 @@ int main() {
         resplitAces = (*input == 'Y' || *input == 'y');
     }
 
-    printf("Enter 'Y' or 'y' if post-split strategy differs from pre-split: ");
+    printf("Enter 'Y' or 'y' if CDZ- (vs. CDP) post-split strategy is used: ");
     scanf("%1s", input);
-    usePostSplit = (*input == 'Y' || *input == 'y');
+    useCDZ = (*input == 'Y' || *input == 'y');
+    useCDP1 = true;
+    if (!useCDZ) {
+        printf("Enter 'Y' or 'y' if CDP1 (vs. CDP) strategy is used: ");
+        scanf("%1s", input);
+        useCDP1 = (*input == 'Y' || *input == 'y');
+    }
 
     printf("Enter 'Y' or 'y' if late surrender is allowed: ");
     scanf("%1s", input);
@@ -212,7 +219,7 @@ int main() {
     BJRules rules(hitSoft17, doubleAnyTotal, double9, doubleSoft,
         doubleAfterHit, doubleAfterSplit, resplit, resplitAces, lateSurrender,
         bjPayoff);
-    BJStrategy strategy(usePostSplit);
+    BJStrategy strategy(useCDZ, useCDP1);
     Progress progress;
     BJPlayer *player = new BJPlayer(*shoe, rules, strategy, progress);
 
@@ -238,19 +245,20 @@ int main() {
     }
     fprintf(file, ", %s, %s",
         hitSoft17 ? "H17" : "S17",
-        doubleAnyTotal ? "DOA" : (double9 ? "D9/10/11" : "D10/11"));
+        doubleAnyTotal ? "DOA" : (double9 ? "D9" : "D10"));
     if (!doubleSoft)
-        fprintf(file, ", no double on soft hands");
+        fprintf(file, ", no double on soft");
     if (doubleAfterHit)
-        fprintf(file, ", D3+");
-    fprintf(file, ", %s", doubleAfterSplit ? "DAS" : "no DAS");
-    if (!resplit)
-        fprintf(file, ", no resplit");
-    else if (resplitAces)
-        fprintf(file, ", RSA");
-    fprintf(file, ", %s", usePostSplit ? "CDNS" : "CDZ-");
+        fprintf(file, ", DAN");
+    fprintf(file, ", %s", doubleAfterSplit ? "DAS" : "NDAS");
+    fprintf(file, ", %s", resplit ? "SPL3" : "SPL1");
+    if (resplit)
+        fprintf(file, resplitAces ? ", RSA" : ", NRSA");
     if (lateSurrender)
         fprintf(file, ", surrender");
+    if (bjPayoff != 1.5)
+        fprintf(file, ", BJ pays %lf", bjPayoff);
+    fprintf(file, ", %s", useCDZ ? "CDZ-" : (useCDP1 ? "CDP1" : "CDP"));
     fprintf(file, "\n\n");
 
 // Display basic strategy for hard hands, organized by count.

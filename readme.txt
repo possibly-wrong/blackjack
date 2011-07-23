@@ -1,5 +1,5 @@
 Blackjack Game and Basic Strategy Calculator
-Version 6.0
+Version 6.1
 Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
@@ -102,10 +102,19 @@ casino rule variations, similar to those specified in the data files for
 the Blackjack game (see above).
 
 There are two additional options not available in the game.  The first
-is the playing strategy for split hands, which may be allowed to differ
-from "pre-split" strategy (CDP) or not (CDZ-, as in the game).  The
-second additional option is the payoff for blackjack, which is normally
-1.5 (3:2).
+is the playing strategy for split hands, which may be any of three
+possibilities:
+
+1. CDZ-, or composition-dependent zero-memory, where "pre-split" optimal
+   strategy is also applied to all split hands (this is the default used
+   in the game);
+2. CDP1, where post-split strategy is optimized for the first split hand
+   and then applied to all subsequent splits; or
+3. CDP, where post-split strategy is allowed to vary as a function of
+   the number of additional pair cards removed.
+
+The second additional option is the payoff for blackjack, which is
+normally 1.5 (3:2).
 
 Once basic strategy for the selected rule variations has been computed,
 enter the name of a file in which to save the basic strategy table.
@@ -154,6 +163,10 @@ are to be entered as 1, not 11.
 
 *** Revision History ***
 
+6.1  An additional CDP1 strategy option for pair splitting optimizes for
+     the first split hand, then applies that fixed strategy to all
+     subsequent splits.
+
 6.0  The algorithm for computing expected values for pair splitting has
      been completely reworked-- again.  Expected values are now exact
      for both CDZ- and CDP for splitting up to a maximum of 4 hands.
@@ -169,7 +182,7 @@ are to be entered as 1, not 11.
      sizes have also been fixed, as well as some code clean-up to
      improve readability.
 
-5.2  Additional practice modes (-1, -2) plays an entire shoe, but
+5.2  Additional practice modes (-1, -2) play an entire shoe, but
      recompute expected value and/or optimal strategy before each hand.
      The game now runs in windowed mode rather than full screen.  The
      blackjack engine source code has been cleaned up without change to

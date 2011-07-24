@@ -91,6 +91,13 @@ Surrender_Allowed = 1
 
 ###########################################################
 #
+#  Payoff for player blackjack (default 1.5 = 3:2).
+#
+
+Blackjack_Payoff = 1.5
+
+###########################################################
+#
 #  Practice mode.
 #
 # -2 : Shuffle and deal entire shoe, but recompute overall

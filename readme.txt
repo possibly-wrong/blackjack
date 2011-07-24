@@ -1,5 +1,5 @@
 Blackjack Game and Basic Strategy Calculator
-Version 6.1
+Version 6.2
 Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
@@ -57,7 +57,9 @@ composition-dependent basic strategy; practice mode -1 computes the
 expected value using the optimal composition-dependent strategy for the
 current shoe.  (More precisely, in all cases, the strategy is CDZ-,
 where the optimal strategy for non-split hands is applied to post-split
-hands as well.)
+hands as well.)  In other words, mode -2 allows you to vary your wager
+perfectly, and mode -1 allows you to vary both your wager and strategy
+perfectly.
 
 Once basic strategy for the selected casino has been computed, you are
 ready to begin playing.  Press the F1 key at any time to toggle the help
@@ -101,8 +103,8 @@ When you run the Basic Strategy Calculator, you must first enter the
 casino rule variations, similar to those specified in the data files for
 the Blackjack game (see above).
 
-There are two additional options not available in the game.  The first
-is the playing strategy for split hands, which may be any of three
+In addition to the rule variations available in the game, you may
+specify the playing strategy for split hands, which may be any of three
 possibilities:
 
 1. CDZ-, or composition-dependent zero-memory, where "pre-split" optimal
@@ -112,9 +114,6 @@ possibilities:
    and then applied to all subsequent splits; or
 3. CDP, where post-split strategy is allowed to vary as a function of
    the number of additional pair cards removed.
-
-The second additional option is the payoff for blackjack, which is
-normally 1.5 (3:2).
 
 Once basic strategy for the selected rule variations has been computed,
 enter the name of a file in which to save the basic strategy table.
@@ -162,6 +161,9 @@ are to be entered as 1, not 11.
 ************************************************************************
 
 *** Revision History ***
+
+6.2  The game now provides the option to specify the payoff for
+     blackjack.
 
 6.1  An additional CDP1 strategy option for pair splitting optimizes for
      the first split hand, then applies that fixed strategy to all

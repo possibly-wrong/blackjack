@@ -509,7 +509,7 @@ int main() {
 
     // Display title and license notice.
     clear(screen);
-    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 6.1");
+    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 6.2");
     textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2011 Eric Farmer");
     textprintf_centre(screen, font, 400, 124, WHITE, "Original card images by Oliver Xymoron");
     textprintf_centre(screen, font, 400, 132, WHITE, "Written using the Allegro Game Programming Library");
@@ -533,6 +533,7 @@ int main() {
         resplit,
         resplitAces,
         lateSurrender;
+    double bjPayoff;
 
     numDecks = get_config_int(NULL, "Number_Of_Decks", 6);
     hitSoft17 = (get_config_int(NULL, "Dealer_Hits_Soft_17", 0) != 0);
@@ -543,9 +544,10 @@ int main() {
     doubleAfterSplit =
             (get_config_int(NULL, "Double_Down_After_Split", 1) != 0);
     resplit = (get_config_int(NULL, "Resplit_Allowed", 1) != 0);
-    resplitAces = (get_config_int(NULL, "Resplit_Aces_Allowed", 1) != 0);
+    resplitAces = (get_config_int(NULL, "Resplit_Aces_Allowed", 0) != 0);
     lateSurrender = (get_config_int(NULL, "Surrender_Allowed", 1) != 0);
-	int practice = get_config_int(NULL, "Practice", 0);
+    bjPayoff = get_config_float(NULL, "Blackjack_Payoff", 1.5);
+	int practice = get_config_int(NULL, "Practice", -2);
     int dealerSpeed = get_config_int(NULL, "Dealer_Speed", 500);
 
     // Load table bitmap and color palette.
@@ -567,7 +569,7 @@ int main() {
     // Compute basic strategy.
     rules = new BJRules(hitSoft17, doubleAnyTotal, double9,
             doubleSoft, doubleAfterHit, doubleAfterSplit, resplit, resplitAces,
-            lateSurrender);
+            lateSurrender, bjPayoff);
     BJStrategy maxValueStrategy;
     Progress progress;
     strategy = new Player(numDecks, rules, maxValueStrategy, progress);
@@ -729,7 +731,8 @@ int main() {
             }
             if (player->getCards() == 2 && player->getCount() == 21) {
                 allSettled = true;
-                balance += player->wager + player->wager*3/2;
+                balance += player->wager +
+                    static_cast<int>(player->wager*bjPayoff);
             }
         }
 

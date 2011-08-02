@@ -1266,6 +1266,11 @@ void BJPlayer::getEVx(std::valarray<double> p, int pairRemoved,
     std::valarray<double> v((double)(shoe.cards[pairCard] - pairRemoved), 11);
     v[pairCard] -= 1;
     v /= shoe.numCards - pairRemoved - nonPairRemoved;
+    for (int upCard = 1; upCard <= 10; ++upCard) {
+        if (v[upCard] >= 1) {
+            p[upCard] = v[upCard] = 0;
+        }
+    }
     getEVx(p / (1.0 - v), pairRemoved, nonPairRemoved - 1, pairCard);
     getEVx(p * v / (v - 1.0), pairRemoved + 1, nonPairRemoved - 1, pairCard);
 }
@@ -1275,6 +1280,11 @@ void BJPlayer::getEVn(std::valarray<double> p, int pairRemoved,
     std::valarray<double> v((double)(shoe.cards[pairCard] - pairRemoved), 11);
     v[pairCard] -= 1;
     v /= shoe.numCards - 1 - pairRemoved - nonPairRemoved;
+    for (int upCard = 1; upCard <= 10; ++upCard) {
+        if (v[upCard] >= 1) {
+            p[upCard] = v[upCard] = 0;
+        }
+    }
     if (nonPairRemoved == 0) {
 
         // Evaluate EV[N;a,0] in terms of EV[X;a,0] and EV[P;a,0].

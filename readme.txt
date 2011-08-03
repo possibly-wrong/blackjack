@@ -1,5 +1,5 @@
 Blackjack Game and Basic Strategy Calculator
-Version 6.2
+Version 6.3
 Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
@@ -161,6 +161,10 @@ are to be entered as 1, not 11.
 ************************************************************************
 
 *** Revision History ***
+
+6.3  A bug in the recursive base case of the splitting algorithm has
+     been fixed.  As a result, the strategy calculator now provides
+     accurate results for "small" depleted shoes.
 
 6.2  The game now provides the option to specify the payoff for
      blackjack.

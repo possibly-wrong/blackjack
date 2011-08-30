@@ -1,5 +1,5 @@
 Blackjack Game and Basic Strategy Calculator
-Version 6.3
+Version 6.4
 Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
@@ -161,6 +161,8 @@ are to be entered as 1, not 11.
 ************************************************************************
 
 *** Revision History ***
+
+6.4  The game is now compatible with Windows Vista/7.
 
 6.3  A bug in the recursive base case of the splitting algorithm has
      been fixed.  As a result, the strategy calculator now provides

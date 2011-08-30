@@ -491,7 +491,7 @@ int main() {
 
     // Initialize Allegro graphics, mouse, keyboard, and timer drivers.
     allegro_init();
-    if (set_gfx_mode(GFX_AUTODETECT_WINDOWED, 800, 600, 0, 0) != 0)
+    if (set_gfx_mode(GFX_GDI, 800, 600, 0, 0) != 0)
         set_gfx_mode(GFX_AUTODETECT, 800, 600, 0, 0);
     install_mouse();
     install_keyboard();
@@ -509,7 +509,7 @@ int main() {
 
     // Display title and license notice.
     clear(screen);
-    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 6.3");
+    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 6.4");
     textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2011 Eric Farmer");
     textprintf_centre(screen, font, 400, 124, WHITE, "Original card images by Oliver Xymoron");
     textprintf_centre(screen, font, 400, 132, WHITE, "Written using the Allegro Game Programming Library");

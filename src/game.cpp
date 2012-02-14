@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // game.cpp
-// Copyright (C) 2011 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2012 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -23,6 +23,7 @@ END_JOYSTICK_DRIVER_LIST
 
 #include "colors.h"
 #include "blackjack.h"
+#include "math_Random.h"
 #include <cstdlib>
 #include <ctime>
 using namespace std;
@@ -78,7 +79,7 @@ public:
                     numCards++;
                 }
         rect(screen, 549, 11, 600, 220, WHITE);
-        srand(time(NULL));
+        rng.seed(static_cast<unsigned int>(time(0)));
         shuffle(0);
     }
 
@@ -89,13 +90,13 @@ public:
     void shuffle(int practice) {
 		int card, value1, value2, temp;
         for (card = 52*numDecks; card > 1; card--)
-            swap(card - 1, rand()%card);
+            swap(card - 1, static_cast<int>(rng.nextInt(card)));
         numCards = 52*numDecks;
 
         // Practice hard hands.
 		if (practice == 1) {
-			value1 = rand()%9 + 2;
-			value2 = rand()%8 + 2;
+			value1 = static_cast<int>(rng.nextInt(9)) + 2;
+			value2 = static_cast<int>(rng.nextInt(8)) + 2;
 			if (value2 >= value1) {
 				value2++;
 			}
@@ -103,8 +104,8 @@ public:
         // Practice soft hands.
 		} else if (practice == 2) {
 			value1 = 1;
-			value2 = rand()%8 + 2;
-			if ((rand()&1) != 0) {
+			value2 = static_cast<int>(rng.nextInt(8)) + 2;
+            if (rng.nextInt(2) != 0) {
 				temp = value1;
 				value1 = value2;
 				value2 = temp;
@@ -112,7 +113,7 @@ public:
 
         // Practice pair hands.
 		} else if (practice == 3) {
-			value1 = rand()%10 + 1;
+			value1 = static_cast<int>(rng.nextInt(10)) + 1;
 			value2 = value1;
 		}
 
@@ -146,6 +147,7 @@ public:
 private:
     int numDecks;
     Card *cards;
+    math::Random rng;
 
     void swap(int card1, int card2) {
         Card temp = cards[card1];
@@ -509,8 +511,8 @@ int main() {
 
     // Display title and license notice.
     clear(screen);
-    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 6.4");
-    textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2011 Eric Farmer");
+    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 6.5");
+    textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2012 Eric Farmer");
     textprintf_centre(screen, font, 400, 124, WHITE, "Original card images by Oliver Xymoron");
     textprintf_centre(screen, font, 400, 132, WHITE, "Written using the Allegro Game Programming Library");
     textprintf_centre(screen, font, 400, 148, WHITE, "Blackjack comes with ABSOLUTELY NO WARRANTY. This is");

@@ -1,6 +1,5 @@
-Blackjack Game and Basic Strategy Calculator
-Version 6.4
-Copyright (C) 2011 Eric Farmer (erfarmer@gmail.com)
+Blackjack version 6.5
+Copyright (C) 2012 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
 Blackjack game written using the Allegro Game Programming Library
@@ -36,7 +35,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 *** Documentation ***
 
-    *** Blackjack ***
+    *** Blackjack Game (blackjack.exe) ***
 
 Press Esc at any time to quit.
 
@@ -46,9 +45,9 @@ play, exact probabilities of outcomes of the dealer's hand and exact
 expected values for your hand(s) are displayed.
 
 When you run Blackjack, you must first select the file containing the
-rule variations for the casino you want.  An example has been included
-in the distribution, with comments to explain how the casino variations
-are specified.
+rule variations for the casino you want.  See the casinos subfolder for
+examples, with comments to explain how the rule variations are
+specified.
 
 Note that the "counting" practice modes, -1 and -2, will cause the
 overall expected value to be recomputed and displayed before each hand.
@@ -58,8 +57,8 @@ expected value using the optimal composition-dependent strategy for the
 current shoe.  (More precisely, in all cases, the strategy is CDZ-,
 where the optimal strategy for non-split hands is applied to post-split
 hands as well.)  In other words, mode -2 allows you to vary your wager
-perfectly, and mode -1 allows you to vary both your wager and strategy
-perfectly.
+perfectly, and mode -1 allows you to vary both your wager and playing
+strategy perfectly.
 
 Once basic strategy for the selected casino has been computed, you are
 ready to begin playing.  Press the F1 key at any time to toggle the help
@@ -95,7 +94,9 @@ hand.  The shoe, displayed in the upper right corner, will be
 automatically reshuffled when the "new shoe" card (indicated by the red
 line) has been reached.
 
-    *** Basic Strategy Calculator ***
+************************************************************************
+
+    *** Basic Strategy Calculator (strategy.exe) ***
 
 Press Ctrl-C at any time to quit.
 
@@ -146,21 +147,56 @@ are to be entered as 1, not 11.
 
 ************************************************************************
 
+    *** Card Counting Analyzer (count.exe) ***
+
+Press Ctrl-C at any time to quit.
+
+When you run the Card Counting Analyzer, you must first enter the casino
+rule variations, similar to those specified in the Basic Strategy
+Calculator (see above).
+
+In addition to the rule variations available in the game, you may
+specify whether to use optimal playing strategy, re-optimized for the
+current depleted shoe prior to each hand; or "full shoe" composition-
+dependent basic strategy.  (In either case, the strategy is CDZ-, where
+the optimal strategy for non-split hands is applied to post-split hands
+as well.)  In other words, optimal strategy allows you to vary both your
+wager and playing strategy perfectly, while basic strategy allows you to
+vary only your wager perfectly.
+
+Finally, you may specify a shoe penetration, a random seed, and a
+starting and ending index of shoes to simulate.  For each simulated
+shoe, a text file with a name of the form shoe#.txt will be created,
+containing a row for each round played in the corresponding shoe.  The
+first 10 columns indicate the number of cards of each rank remaining in
+the shoe prior to the round (ace through ten).  The 11th column
+indicates the exact expected value of the round, in fraction of initial
+wager.  The 12th column indicates the actual outcome of the simulated
+round, in fraction of initial wager.
+
+************************************************************************
+
 *** List Of Files ***
 
     The package consists of the following files:
 
     blackjack.exe  Executable for Blackjack game
     strategy.exe   Executable for Basic Strategy Calculator
+    count.exe      Executable for Count Analyzer
     readme.txt     This file
     gpl.txt        GNU General Public License
     casinos\       2 casino data files
     images\        55 card and table bitmaps
-    src\           5 C++ source files for both programs
+    src\           8 C++ source files
 
 ************************************************************************
 
 *** Revision History ***
+
+6.5  An additional program, count.exe, generates samples of simulated
+     depleted shoes with corresponding expected values for analysis of
+     card counting systems.  This program, and now also the game, use
+     the Mersenne Twister random number generator for deck shuffling.
 
 6.4  The game is now compatible with Windows Vista/7.
 

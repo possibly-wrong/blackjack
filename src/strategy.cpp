@@ -102,6 +102,68 @@ char *getStrategy(BJRules & rules, BJPlayer *player, int card1, int card2,
     return options;
 }
 
+// CDvsTD::printVariations(file) displays a count and list of the composition-
+// dependent stand/hit strategy variations.
+
+const char *ranks[] = {"", "A", "2", "3", "4", "5", "6", "7", "8", "9", "T"};
+
+class CDvsTD : public BJPlayer {
+public:
+    CDvsTD(const BJShoe & shoe, BJRules & rules, BJStrategy & strategy,
+        BJProgress & progress) :
+        BJPlayer(shoe, rules, strategy, progress) {
+        // empty
+    }
+
+    void printVariations(FILE *file) {
+        int totalChanges = 0;
+        for (int soft = 0; soft <= 1; ++soft) {
+            for (int count = 21; count >= 4 + 8 * soft; --count) {
+                for (int upCard = 1; upCard <= 10; ++upCard) {
+                    int numHands = 0;
+                    int hitHands = 0;
+                    for (int i = playerHandCount[count][soft]; i;
+                        i = playerHands[i].nextHand) {
+                        ++numHands;
+                        BJHand hand(playerHands[i].cards);
+                        if (getValueStand(hand, upCard) <
+                            getValueHit(hand, upCard)) {
+                            ++hitHands;
+                        }
+                    }
+                    if (hitHands > 0 && hitHands < numHands) {
+                        bool hit = (2 * hitHands > numHands);
+                        int numChanges =
+                            (hit ? numHands - hitHands : hitHands);
+                        totalChanges += numChanges;
+                        fprintf(file, "(%3d) %s %2d vs. %s : %s except",
+                            numChanges, soft ? "Soft" : "Hard", count,
+                            ranks[upCard], hit ? "hit" : "stand");
+                        for (int i = playerHandCount[count][soft]; i;
+                            i = playerHands[i].nextHand) {
+                            BJHand hand(playerHands[i].cards);
+                            bool hitHand = (getValueStand(hand, upCard) <
+                                            getValueHit(hand, upCard));
+                            if ((hit && !hitHand) || (!hit && hitHand)) {
+                                fprintf(file, ", ");
+                                for (int card = 1; card <= 10; ++card) {
+                                    for (int n = 0; n < hand.getCards(card);
+                                        ++n) {
+                                        fprintf(file, "%s", ranks[card]);
+                                    }
+                                }
+                            }
+                        }
+                        fprintf(file, "\n");
+                    }
+                }
+            }
+        }
+        fprintf(file, "-----\n");
+        fprintf(file, "%4d", totalChanges);
+    }
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 //
 // Main program
@@ -117,7 +179,7 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Basic Strategy Calculator version 6.5\n");
+    printf("Blackjack Basic Strategy Calculator version 6.6\n");
     printf("Copyright (C) 2012 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
@@ -221,7 +283,7 @@ int main() {
         bjPayoff);
     BJStrategy strategy(useCDZ, useCDP1);
     Progress progress;
-    BJPlayer *player = new BJPlayer(*shoe, rules, strategy, progress);
+    CDvsTD *player = new CDvsTD(*shoe, rules, strategy, progress);
 
 // Get output filename and prepare to save basic strategy table.
 
@@ -361,6 +423,12 @@ int main() {
     for (count = 17; count <= 21; count++)
         fprintf(file, " | %.5lf", dealer.getProbabilityCount(count));
     fprintf(file, " | %.5lf\n", dealer.getProbabilityBlackjack());
+
+// Display composition-dependent strategy variations.
+
+    fprintf(file, "\n\nComposition-dependent stand/hit strategy variations:\n");
+    fprintf(file, "----------------------------------------------------\n");
+    player->printVariations(file);
     fclose(file);
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -393,5 +461,4 @@ int main() {
     }
 
     delete player;
-    return 0;
 }

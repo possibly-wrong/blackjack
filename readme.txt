@@ -1,4 +1,4 @@
-Blackjack version 6.5
+Blackjack version 6.6
 Copyright (C) 2012 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
@@ -156,23 +156,24 @@ rule variations, similar to those specified in the Basic Strategy
 Calculator (see above).
 
 In addition to the rule variations available in the game, you may
-specify whether to use optimal playing strategy, re-optimized for the
-current depleted shoe prior to each hand; or "full shoe" composition-
-dependent basic strategy.  (In either case, the strategy is CDZ-, where
-the optimal strategy for non-split hands is applied to post-split hands
-as well.)  In other words, optimal strategy allows you to vary both your
-wager and playing strategy perfectly, while basic strategy allows you to
-vary only your wager perfectly.
+specify whether to simulate play of each round using optimal playing
+strategy, re-optimized for the current depleted shoe prior to each hand;
+or "full shoe" composition-dependent basic strategy.  (In either case,
+the strategy is CDZ-, where the optimal strategy for non-split hands is
+applied to post-split hands as well.)  In other words, optimal strategy
+allows you to vary both your wager and playing strategy perfectly, while
+basic strategy allows you to vary only your wager perfectly.
 
 Finally, you may specify a shoe penetration, a random seed, and a
 starting and ending index of shoes to simulate.  For each simulated
 shoe, a text file with a name of the form shoe#.txt will be created,
 containing a row for each round played in the corresponding shoe.  The
 first 10 columns indicate the number of cards of each rank remaining in
-the shoe prior to the round (ace through ten).  The 11th column
-indicates the exact expected value of the round, in fraction of initial
-wager.  The 12th column indicates the actual outcome of the simulated
-round, in fraction of initial wager.
+the shoe prior to the round (ace through ten).  The 11th and 12th
+columns indicate the exact expected value of the round assuming full-
+shoe and optimal strategy, respectively, in fraction of initial wager.
+The last column indicates the actual outcome of the simulated round, in
+fraction of initial wager.
 
 ************************************************************************
 
@@ -192,6 +193,11 @@ round, in fraction of initial wager.
 ************************************************************************
 
 *** Revision History ***
+
+6.6  The strategy calculator now displays all composition-dependent
+     stand/hit strategy variations.  The card counting analyzer now
+     supports computing and recording both basic and optimal expected
+     values for each simulated round.
 
 6.5  An additional program, count.exe, generates samples of simulated
      depleted shoes with corresponding expected values for analysis of

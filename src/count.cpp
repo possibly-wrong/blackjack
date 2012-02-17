@@ -189,8 +189,8 @@ public:
 // Release all objects and exit.
 
 BJRules *rules;
+Player *basic;
 Player *strategy;
-BJPlayer *basic;
 Hand *dealer;
 Probabilities *dealerProbabilities;
 Shoe *shoe;
@@ -215,7 +215,7 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Card Counting Analyzer version 6.5\n");
+    printf("Blackjack Card Counting Analyzer version 6.6\n");
     printf("Copyright (C) 2012 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
@@ -318,8 +318,8 @@ int main() {
     distribution = new BJShoe(numDecks);
     BJStrategy maxValueStrategy;
     BJProgress progress;
+    basic = new Player(numDecks, rules, maxValueStrategy, progress);
     strategy = new Player(numDecks, rules, maxValueStrategy, progress);
-    basic = new BJPlayer(*distribution, *rules, maxValueStrategy, progress);
 
 // Prepare to play blackjack.
 
@@ -377,13 +377,10 @@ int main() {
 
         for (int card = 1; card <= 10; card++)
             fprintf(file, "%d ", distribution->getCards(card));
-        if (optimalPlay) {
-            strategy->reset(*distribution, *rules, maxValueStrategy, progress);
-            fprintf(file, "%.15lf ", strategy->getValue());
-        } else {
-            basic->reset(*distribution, *rules, *strategy, progress);
-            fprintf(file, "%.15lf ", basic->getValue());
-        }
+        strategy->reset(*distribution, *rules, *basic, progress);
+        fprintf(file, "%.17lf ", strategy->getValue());
+        strategy->reset(*distribution, *rules, maxValueStrategy, progress);
+        fprintf(file, "%.17lf ", strategy->getValue());
 
 // Get player wager.
 
@@ -440,7 +437,8 @@ int main() {
 // Get player option, reminding of best option if necessary.
 
                 else {
-                    int bestOption = strategy->showOptions(player,
+                    int bestOption =
+                        (optimalPlay ? strategy : basic)->showOptions(player,
                         dealer->cards[0].value(), numHands, options,
                         numOptions);
                     ch = bestOption;
@@ -517,5 +515,4 @@ int main() {
         }
         fprintf(file, "%.1lf\n", (balance - startBalance) / lastWager);
     }
-    return 0;
 }

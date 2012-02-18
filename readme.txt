@@ -1,4 +1,4 @@
-Blackjack version 6.6
+Blackjack version 6.7
 Copyright (C) 2012 Eric Farmer (erfarmer@gmail.com)
 
 Original card images by Oliver Xymoron
@@ -145,6 +145,8 @@ where:
 Note that all tens and face cards are to be entered as 10, and all aces
 are to be entered as 1, not 11.
 
+To exit, enter "0 0" for the dealer up card and player hand.
+
 ************************************************************************
 
     *** Card Counting Analyzer (count.exe) ***
@@ -193,6 +195,10 @@ fraction of initial wager.
 ************************************************************************
 
 *** Revision History ***
+
+6.7  The strategy calculator now exits on entry of "0 0" for an
+     individual dealer up card and player hand, simplifying automated
+     batch runs.
 
 6.6  The strategy calculator now displays all composition-dependent
      stand/hit strategy variations.  The card counting analyzer now

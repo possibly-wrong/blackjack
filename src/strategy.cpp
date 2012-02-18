@@ -179,7 +179,7 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Basic Strategy Calculator version 6.6\n");
+    printf("Blackjack Basic Strategy Calculator version 6.7\n");
     printf("Copyright (C) 2012 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
@@ -439,6 +439,8 @@ int main() {
     while (true) {
         printf("\nEnter dealer up card and player hand (Ctrl-C to exit): ");
         scanf("%d%d", &upCard, &numCards);
+        if (upCard == 0 && numCards == 0)
+            break;
         BJHand hand;
         for (card = 0; card < numCards; card++) {
             scanf("%d", &hitCard);

@@ -179,25 +179,10 @@ public:
 
 protected:
     bool hitSoft17;
-    struct DealerHand {
-        int cards[11],
-            multiplier[11];
-    };
-    struct DealerHandCount {
-        int numHands;
-        DealerHand dealerHands[423];
-    } dealerHandCount[5];
-    BJHand currentHand;
-    int upCard;
     double probabilityBust[11],
         probabilityCount[5][11],
         probabilityBlackjack[11],
-        probabilityCard[11],
-        lookup[13][11][12];
-    static const int maxSvalues[11],
-        maxHvalues[11];
-
-    void countHands();
+        probabilityCard[11];
 
     friend class BJPlayer;
 };

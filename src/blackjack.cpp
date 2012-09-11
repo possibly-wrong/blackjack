@@ -159,116 +159,65 @@ void BJShoe::undeal(int card) {
 
 BJDealer::BJDealer(bool hitSoft17) {
     this->hitSoft17 = hitSoft17;
-    for (int count = 17; count <= 21; ++count) {
-        dealerHandCount[count - 17].numHands = 0;
-    }
-
-    // Enumerate all possible dealer hands, counting multiplicities for each up
-    // card.
-    currentHand.reset();
-    for (upCard = 1; upCard <= 10; ++upCard) {
-        currentHand.deal(upCard);
-        countHands();
-        currentHand.undeal(upCard);
-    }
-
-    for (upCard = 1; upCard <= 10; ++upCard) {
+    for (int upCard = 1; upCard <= 10; ++upCard) {
         probabilityBlackjack[upCard] = 0;
     }
 }
 
-// max*Values[c] are the largest values of s and h for which we need to compute
-// lookup[][c][].
-//
-// lookup[s][c][h] is the probability of h + 1 consecutive cards with value c
-// being dealt from the shoe, given that s other cards have been removed from
-// the shoe, and is equal to:
-// f(shoe.cards[c], h + 1)/f(shoe.numCards - s, h + 1), where f is the falling
-// factorial function.
-const int BJDealer::maxSvalues[11] = {0, 0, 11, 11, 11, 12, 11, 10, 9, 8, 7};
-const int BJDealer::maxHvalues[11] = {0, 11, 8, 5, 4, 3, 2, 2, 1, 1, 1};
-
 void BJDealer::computeProbabilities(const BJShoe & shoe) {
 
-    // Compute lookup[][][].
-    for (int upCard = 1; upCard <= 10; ++upCard) {
-        int maxS = maxSvalues[upCard],
-            maxH = maxHvalues[upCard],
-            numCards = shoe.numCards;
-        for (int s = 0; s <= maxS && numCards; ++s, --numCards) {
-            double *l = lookup[s][upCard];
-            int cards = shoe.cards[upCard],
-                n = numCards;
-            double p = l[0] = (double)cards-- / n--;
-            for (int h = 1; h <= maxH && cards; ++h) {
-                p *= (double)cards-- / n--;
-                l[h] = p;
-            }
-        }
-    }
+    // Define constants for auto-generated code.
+    const int s1 = shoe.cards[1];
+    const int s2 = shoe.cards[2];
+    const int s3 = shoe.cards[3];
+    const int s4 = shoe.cards[4];
+    const int s5 = shoe.cards[5];
+    const int s6 = shoe.cards[6];
+    const int s7 = shoe.cards[7];
+    const int s8 = shoe.cards[8];
+    const int s9 = shoe.cards[9];
+    const int s10 = shoe.cards[10];
+    const int t = shoe.numCards;
+    double *pcount_17 = probabilityCount[0];
+    double *pcount_18 = probabilityCount[1];
+    double *pcount_19 = probabilityCount[2];
+    double *pcount_20 = probabilityCount[3];
+    double *pcount_21 = probabilityCount[4];
 
-    // probabilityBust[] will accumulate the probability of NOT busting, so we
-    // don't have to actually count those hands.
+    // Initialize accumulated probabilities.
     for (int upCard = 1; upCard <= 10; ++upCard) {
+        for (int count = 17; count <= 21; ++count) {
+            probabilityCount[count - 17][upCard] = 0;
+        }
         probabilityBust[upCard] = 0;
     }
 
     // For each (non-bust, non-blackjack) possible outcome, accumulate
     // probability of each hand with that count (that is actually possible in
     // the given shoe).
-    for (int count = 17; count <= 21; ++count) {
-        double *pcount = probabilityCount[count - 17];
-        for (int upCard = 1; upCard <= 10; ++upCard) {
-            pcount[upCard] = 0;
-        }
-        DealerHandCount & list = dealerHandCount[count - 17];
-        for (int i = 0; i < list.numHands; ++i) {
-            DealerHand & hand = list.dealerHands[i];
-            bool possible = true;
-            for (int card = 1; card <= 10; ++card) {
-                if (hand.cards[card] > shoe.cards[card]) {
-                    possible = false;
-                    break;
-                }
-            }
+    if (hitSoft17) {
+#include "dealer_h17.hpp"
+    } else {
+#include "dealer_s17.hpp"
+    }
 
-            // If it is possible (i.e., a subset of the shoe), compute
-            // probability of the hand.  Note the initial value of p; we save
-            // 10 multiplications in the next step by doing part of the
-            // "conditioning" here.
-            if (possible) {
-                int s = 0;
-                double p = shoe.numCards;
-                for (int card = 1; card <= 10; ++card) {
-                    if (hand.cards[card]) {
-                        p *= lookup[s][card][hand.cards[card] - 1];
-                        s += hand.cards[card];
-                    }
-                }
-
-                // For each up card, a certain number of permutations of the
-                // cards in the hand are possible, each equally likely.  Count
-                // these, conditioned on each up card.
-                for (int upCard = 1; upCard <= 10; ++upCard) {
-                    pcount[upCard] += p * hand.multiplier[upCard];
-                }
+    // probabilityBust[] will accumulate the probability of NOT busting, so we
+    // don't have to actually count those hands.
+    for (int upCard = 1; upCard <= 10; ++upCard) {
+        if (shoe.cards[upCard]) {
+            for (int count = 17; count <= 21; ++count) {
+                probabilityCount[count - 17][upCard] /= shoe.cards[upCard];
+                probabilityBust[upCard] +=
+                    probabilityCount[count - 17][upCard];
             }
-        }
-        for (int upCard = 1; upCard <= 10; ++upCard) {
-            if (shoe.cards[upCard]) {
-                pcount[upCard] /= shoe.cards[upCard];
-            }
-            probabilityBust[upCard] += pcount[upCard];
         }
     }
 
     // Compute P(blackjack).
-    if (shoe.cards[1] && shoe.cards[10]) {
-        probabilityBlackjack[1] =
-            (double)(shoe.cards[10]) / (shoe.numCards - 1);
+    if (s1 && s10) {
+        probabilityBlackjack[1] = (double)s10 / (t - 1);
         probabilityBust[1] += probabilityBlackjack[1];
-        probabilityBlackjack[10] =
-            (double)(shoe.cards[1]) / (shoe.numCards - 1);
+        probabilityBlackjack[10] = (double)s1 / (t - 1);
         probabilityBust[10] += probabilityBlackjack[10];
     } else {
         probabilityBlackjack[1] = probabilityBlackjack[10] = 0;
@@ -312,49 +261,6 @@ double BJDealer::getProbabilityBlackjack(int upCard) const {
 double BJDealer::getProbabilityBlackjack() const {
     return (probabilityBlackjack[1] * probabilityCard[1] +
             probabilityBlackjack[10] * probabilityCard[10]);
-}
-
-void BJDealer::countHands() {
-
-    // If necessary, draw another card.
-    if (currentHand.count < 17 || (hitSoft17
-            && currentHand.count == 17 && currentHand.soft)) {
-        for (int card = 1; card <= 10; ++card) {
-            currentHand.deal(card);
-            countHands();
-            currentHand.undeal(card);
-        }
-
-    // Otherwise, record all non-bust, non-blackjack hands.
-    } else if (currentHand.count <= 21 && (currentHand.numCards != 2
-            || currentHand.count != 21)) {
-        DealerHandCount & list = dealerHandCount[currentHand.count - 17];
-        bool found = false;
-        for (int i = 0; i < list.numHands; ++i) {
-            DealerHand & hand = list.dealerHands[i];
-            bool match = true;
-            for (int card = 1; card <= 10; ++card) {
-                if (currentHand.cards[card] != hand.cards[card]) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                ++hand.multiplier[upCard];
-                found = true;
-                break;
-            }
-        }
-        if (!found) {
-            DealerHand & hand = list.dealerHands[list.numHands];
-            for (int card = 1; card <= 10; ++card) {
-                hand.cards[card] = currentHand.cards[card];
-                hand.multiplier[card] = 0;
-            }
-            ++hand.multiplier[upCard];
-            ++list.numHands;
-        }
-    }
 }
 
 ///////////////////////////////////////////////////////////////////////////////

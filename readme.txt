@@ -1,7 +1,6 @@
-Blackjack version 6.7
+Blackjack version 6.8
 Copyright (C) 2012 Eric Farmer (erfarmer@gmail.com)
 
-Original card images by Oliver Xymoron
 Blackjack game written using the Allegro Game Programming Library
 Thanks to London Colin for many improvements and bug fixes
 
@@ -9,9 +8,9 @@ Thanks to London Colin for many improvements and bug fixes
 
 *** License ***
 
-This program is free software; you can redistribute it and/or modify
+This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
+the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -20,16 +19,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
-
-    Original card images have been modified as follows:
-
-    1. Converted to 16-color Windows bitmap format
-    2. Transparent color mask changed to Allegro default
-
-    Source code for the card images may be obtained at:
-    http://www.waste.org/~oxymoron/cards/
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ************************************************************************
 
@@ -188,13 +178,18 @@ fraction of initial wager.
     count.exe      Executable for Count Analyzer
     readme.txt     This file
     gpl.txt        GNU General Public License
+    msvcr71.dll    Microsoft C Runtime Library
     casinos\       2 casino data files
     images\        55 card and table bitmaps
-    src\           8 C++ source files
+    src\           10 C++ source files
 
 ************************************************************************
 
 *** Revision History ***
+
+6.8  A major re-factoring of the computation of dealer probabilities
+     yields a significant improvement in speed.  The game now uses
+     public domain card images.
 
 6.7  The strategy calculator now exits on entry of "0 0" for an
      individual dealer up card and player hand, simplifying automated

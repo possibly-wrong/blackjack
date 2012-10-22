@@ -1,7 +1,8 @@
-Blackjack version 6.8
+Blackjack version 7.0
 Copyright (C) 2012 Eric Farmer (erfarmer@gmail.com)
 
 Blackjack game written using the Allegro Game Programming Library
+Original card images Copyright 2011 Chris Aguilar
 Thanks to London Colin for many improvements and bug fixes
 
 ************************************************************************
@@ -20,6 +21,10 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+Original Vectorized Playing Cards 1.3 Copyright 2011 Chris Aguilar
+http://code.google.com/p/vectorized-playing-cards/
+Licensed under LGPL 3: http://www.gnu.org/copyleft/lesser.html
 
 ************************************************************************
 
@@ -178,14 +183,17 @@ fraction of initial wager.
     count.exe      Executable for Count Analyzer
     readme.txt     This file
     gpl.txt        GNU General Public License
-    msvcr71.dll    Microsoft C Runtime Library
     casinos\       2 casino data files
     images\        55 card and table bitmaps
-    src\           10 C++ source files
+    src\           9 C++ source files
 
 ************************************************************************
 
 *** Revision History ***
+
+7.0  The game now uses 24-bit color, with improved card images from
+     Chris Aguilar.  The speed of computing dealer probabilities has
+     also been improved slightly (again).
 
 6.8  A major re-factoring of the computation of dealer probabilities
      yields a significant improvement in speed.  The game now uses

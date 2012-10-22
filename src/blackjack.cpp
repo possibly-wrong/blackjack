@@ -189,7 +189,7 @@ void BJDealer::computeProbabilities(const BJShoe & shoe) {
         for (int count = 17; count <= 21; ++count) {
             probabilityCount[count - 17][upCard] = 0;
         }
-        probabilityBust[upCard] = 0;
+        probabilityBust[upCard] = 1;
     }
 
     // For each (non-bust, non-blackjack) possible outcome, accumulate
@@ -201,13 +201,13 @@ void BJDealer::computeProbabilities(const BJShoe & shoe) {
 #include "dealer_s17.hpp"
     }
 
-    // probabilityBust[] will accumulate the probability of NOT busting, so we
-    // don't have to actually count those hands.
+    // probabilityCount[] will accumulate the probability of NOT busting, so we
+    // don't have to actually count busted hands.
     for (int upCard = 1; upCard <= 10; ++upCard) {
         if (shoe.cards[upCard]) {
             for (int count = 17; count <= 21; ++count) {
                 probabilityCount[count - 17][upCard] /= shoe.cards[upCard];
-                probabilityBust[upCard] +=
+                probabilityBust[upCard] -=
                     probabilityCount[count - 17][upCard];
             }
         }
@@ -216,16 +216,15 @@ void BJDealer::computeProbabilities(const BJShoe & shoe) {
     // Compute P(blackjack).
     if (s1 && s10) {
         probabilityBlackjack[1] = (double)s10 / (t - 1);
-        probabilityBust[1] += probabilityBlackjack[1];
+        probabilityBust[1] -= probabilityBlackjack[1];
         probabilityBlackjack[10] = (double)s1 / (t - 1);
-        probabilityBust[10] += probabilityBlackjack[10];
+        probabilityBust[10] -= probabilityBlackjack[10];
     } else {
         probabilityBlackjack[1] = probabilityBlackjack[10] = 0;
     }
 
-    // Now compute P(bust) easily.
+    // Store probability of each up card for computing overall probabilities.
     for (int upCard = 1; upCard <= 10; ++upCard) {
-        probabilityBust[upCard] = 1 - probabilityBust[upCard];
         probabilityCard[upCard] = shoe.getProbability(upCard);
     }
 }

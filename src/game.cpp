@@ -9,7 +9,8 @@
 #include <allegro.h>
 
 BEGIN_COLOR_DEPTH_LIST
-    COLOR_DEPTH_8
+    COLOR_DEPTH_24
+    COLOR_DEPTH_32
 END_COLOR_DEPTH_LIST
 
 BEGIN_DIGI_DRIVER_LIST
@@ -21,12 +22,18 @@ END_MIDI_DRIVER_LIST
 BEGIN_JOYSTICK_DRIVER_LIST
 END_JOYSTICK_DRIVER_LIST
 
-#include "colors.h"
 #include "blackjack.h"
 #include "math_Random.h"
 #include <cstdlib>
 #include <ctime>
 using namespace std;
+
+#define BLACK makecol(0, 0, 0)
+#define RED makecol(255, 0, 0)
+#define DARK_GREEN makecol(0, 128, 0)
+#define BLUE makecol(0, 0, 255)
+#define YELLOW makecol(255, 255, 0)
+#define WHITE makecol(255, 255, 255)
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -493,8 +500,8 @@ int main() {
 
     // Initialize Allegro graphics, mouse, keyboard, and timer drivers.
     allegro_init();
-    if (set_gfx_mode(GFX_GDI, 800, 600, 0, 0) != 0)
-        set_gfx_mode(GFX_AUTODETECT, 800, 600, 0, 0);
+    set_color_depth(desktop_color_depth());
+    set_gfx_mode(GFX_AUTODETECT_WINDOWED, 800, 600, 0, 0);
     install_mouse();
     install_keyboard();
     install_timer();
@@ -511,9 +518,10 @@ int main() {
 
     // Display title and license notice.
     clear(screen);
-    textprintf_centre(screen, font, 400, 108, WHITE, "Blackjack version 6.8");
-    textprintf_centre(screen, font, 400, 116, WHITE, "Copyright (C) 2012 Eric Farmer");
-    textprintf_centre(screen, font, 400, 132, WHITE, "Written using the Allegro Game Programming Library");
+    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 7.0");
+    textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2012 Eric Farmer");
+    textprintf_centre(screen, font, 400, 124, WHITE, "Written using the Allegro Game Programming Library");
+    textprintf_centre(screen, font, 400, 132, WHITE, "Original card images Copyright 2011 Chris Aguilar");
     textprintf_centre(screen, font, 400, 148, WHITE, "Blackjack comes with ABSOLUTELY NO WARRANTY. This is");
     textprintf_centre(screen, font, 400, 156, WHITE, "free software, and you are welcome to redistribute it");
     textprintf_centre(screen, font, 400, 164, WHITE, "under certain conditions; see gpl.txt for details.");
@@ -551,11 +559,10 @@ int main() {
 	int practice = get_config_int(NULL, "Practice", -2);
     int dealerSpeed = get_config_int(NULL, "Dealer_Speed", 500);
 
-    // Load table bitmap and color palette.
+    // Load table bitmap.
     append_filename(filename, "images/", hitSoft17 ? "h17.bmp" : "s17.bmp",
             128);
     tableBitmap = load_bitmap(filename, palette);
-    set_palette(palette);
 
     // Clear screen and prepare to compute basic strategy.
     rect(screen, 0, 0, 799, 599, WHITE);

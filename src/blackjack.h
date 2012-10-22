@@ -215,7 +215,7 @@ public:
         bool double9 = true, bool doubleSoft = true,
         bool doubleAfterHit = false, bool doubleAfterSplit = true,
         bool resplit = true, bool resplitAces = false,
-        bool lateSurrender = false, double bjPayoff = 1.5);
+        bool lateSurrender = true, double bjPayoff = 1.5);
 
     // ~BJRules() allows appropriate destruction of objects derived from
     // BJRules.

@@ -1,5 +1,5 @@
-Blackjack version 7.0
-Copyright (C) 2012 Eric Farmer (erfarmer@gmail.com)
+Blackjack version 7.1
+Copyright (C) 2013 Eric Farmer (erfarmer@gmail.com)
 
 Blackjack game written using the Allegro Game Programming Library
 Original card images Copyright 2011 Chris Aguilar
@@ -153,24 +153,36 @@ rule variations, similar to those specified in the Basic Strategy
 Calculator (see above).
 
 In addition to the rule variations available in the game, you may
-specify whether to simulate play of each round using optimal playing
-strategy, re-optimized for the current depleted shoe prior to each hand;
-or "full shoe" composition-dependent basic strategy.  (In either case,
-the strategy is CDZ-, where the optimal strategy for non-split hands is
-applied to post-split hands as well.)  In other words, optimal strategy
-allows you to vary both your wager and playing strategy perfectly, while
-basic strategy allows you to vary only your wager perfectly.
+specify indices for total-dependent strategy variations based on the
+true count.  Each index is specified by 8 values:
+
+1. Count = hand total, with negative total indicating a soft hand.
+2. Dealer up card (1-10).
+3. Double down = 1 if doubling down is allowed on the hand, 0 otherwise.
+4. Split = 1 if splitting is allowed on the hand, 0 otherwise.
+5. Surrender = 1 if late surrender is allowed on the hand, 0 otherwise.
+6. True count = threshold true count (see 7 and 8 below).
+7. Play1 = strategy when true count is below threshold:
+           1=stand, 2=hit, 3=double, 4=split, 5=surrender
+8. Play2 = strategy when true count is at least threshold.
+
+You may also specify the playing strategy to use during simulated play:
+
+0 = total-dependent index play (TDI).
+1 = full-shoe composition-dependent basic strategy (CDZ-).
+2 = optimal strategy, re-optimized for the current depleted shoe prior
+    to each hand.
 
 Finally, you may specify a shoe penetration, a random seed, and a
 starting and ending index of shoes to simulate.  For each simulated
 shoe, a text file with a name of the form shoe#.txt will be created,
 containing a row for each round played in the corresponding shoe.  The
 first 10 columns indicate the number of cards of each rank remaining in
-the shoe prior to the round (ace through ten).  The 11th and 12th
-columns indicate the exact expected value of the round assuming full-
-shoe and optimal strategy, respectively, in fraction of initial wager.
-The last column indicates the actual outcome of the simulated round, in
-fraction of initial wager.
+the shoe prior to the round (ace through ten).  The 11-13th columns
+indicate the exact expected value of the round assuming TDI, full-shoe
+CDZ-, and optimal CDZ- strategy, respectively, in fraction of initial
+wager.  The last column indicates the actual outcome of the simulated
+round, in fraction of initial wager.
 
 ************************************************************************
 
@@ -185,11 +197,14 @@ fraction of initial wager.
     gpl.txt        GNU General Public License
     casinos\       2 casino data files
     images\        55 card and table bitmaps
-    src\           9 C++ source files
+    src\           11 C++ source files
 
 ************************************************************************
 
 *** Revision History ***
+
+7.1  The card counting analyzer now supports total-dependent strategy
+     with true count-dependent index plays.
 
 7.0  The game now uses 24-bit color, with improved card images from
      Chris Aguilar.  The speed of computing dealer probabilities has

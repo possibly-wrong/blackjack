@@ -1,11 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // count.cpp
-// Copyright (C) 2012 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2013 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "blackjack.h"
+#include "indices.h"
 #include "math_Random.h"
 #include <cstdio>
 #include <cstdlib>
@@ -215,8 +215,8 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Card Counting Analyzer version 7.0\n");
-    printf("Copyright (C) 2012 Eric Farmer\n");
+    printf("Blackjack Card Counting Analyzer version 7.1\n");
+    printf("Copyright (C) 2013 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
     printf("This is free software, and you are welcome to\n");
@@ -286,12 +286,45 @@ int main() {
     printf("Enter blackjack payoff (normally 1.5): ");
     scanf("%lf", &bjPayoff);
 
-// Get playing strategy (basic or optimal) and penetration.
+// Get TDI strategy count tags and indices.
 
-    bool optimalPlay;
-    printf("\nEnter 'Y' or 'y' if optimal playing strategy is used: ");
-    scanf("%1s", input);
-    optimalPlay = (*input == 'Y' || *input == 'y');
+    printf("\nEnter number of TDI indices: ");
+    int numIndices;
+    scanf("%d", &numIndices);
+    double tags[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    if (numIndices > 0) {
+        printf("  ==========================================\n");
+        printf("  Enter count tags (1-10): ");
+        for (int card = 1; card <= 10; card++) {
+            scanf("%lf", &tags[card]);
+        }
+    }
+    rules = new BJRules(hitSoft17, doubleAnyTotal, double9,
+            doubleSoft, doubleAfterHit, doubleAfterSplit, resplit, resplitAces,
+            lateSurrender, bjPayoff);
+    distribution = new BJShoe(numDecks);
+    BJShoe indexShoe(numDecks);
+    IndexStrategy indices(*rules, tags, indexShoe);
+    if (numIndices > 0) {
+        printf("\n               cnt up  dbl spl sur  tc p1 p2\n");
+        for (int idx = 0; idx < numIndices; ++idx) {
+            printf("  Enter index: ");
+            int count, card, doubleDown, split, surrender, play1, play2;
+            double trueCount;
+            scanf("%d%d%d%d%d%lf%d%d", &count, &card, &doubleDown, &split,
+                &surrender, &trueCount, &play1, &play2);
+            bool soft = (count < 0);
+            indices.setIndex(soft ? -count : count, soft, card,
+                doubleDown != 0, split != 0, surrender != 0,
+                trueCount, play1, play2);
+        }
+    }
+
+// Get playing strategy (TDI, full-shoe CDZ-, or optimal) and penetration.
+
+    int optimalPlay;
+    printf("\nEnter 0=TDI, 1=CDZ-, or 2=optimal playing strategy: ");
+    scanf("%d", &optimalPlay);
 
     int penetration;
     printf("\nEnter shoe penetration (%%): ");
@@ -312,10 +345,6 @@ int main() {
 
 // Compute basic strategy.
 
-    rules = new BJRules(hitSoft17, doubleAnyTotal, double9,
-            doubleSoft, doubleAfterHit, doubleAfterSplit, resplit, resplitAces,
-            lateSurrender, bjPayoff);
-    distribution = new BJShoe(numDecks);
     BJStrategy maxValueStrategy;
     BJProgress progress;
     basic = new Player(numDecks, rules, maxValueStrategy, progress);
@@ -377,6 +406,9 @@ int main() {
 
         for (int card = 1; card <= 10; card++)
             fprintf(file, "%d ", distribution->getCards(card));
+        indexShoe = *distribution;
+        strategy->reset(*distribution, *rules, indices, progress);
+        fprintf(file, "%.17lf ", strategy->getValue());
         strategy->reset(*distribution, *rules, *basic, progress);
         fprintf(file, "%.17lf ", strategy->getValue());
         strategy->reset(*distribution, *rules, maxValueStrategy, progress);
@@ -437,11 +469,42 @@ int main() {
 // Get player option, reminding of best option if necessary.
 
                 else {
-                    int bestOption =
-                        (optimalPlay ? strategy : basic)->showOptions(player,
-                        dealer->cards[0].value(), numHands, options,
-                        numOptions);
-                    ch = bestOption;
+                    switch (optimalPlay) {
+                        case 0:
+                            {
+                                int card = player->cards[0].value();
+                                bool doubleDown = false;
+                                if (numHands == 1 || card != 1) {
+                                    doubleDown = ((numHands == 1 && rules->getDoubleDown(*player)) ||
+                                            (numHands > 1 && rules->getDoubleAfterSplit(*player)));
+                                }
+                                bool split = (player->getCards() == 2 && card == player->cards[1].value()
+                                        && numHands < rules->getResplit(card));
+                                bool surrender = (rules->getLateSurrender() && player->getCards() == 2
+                                        && numHands == 1);
+                                ch = indices.getOption(*player,
+                                    dealer->cards[0].value(),
+                                    doubleDown, split, surrender) - 1;
+                                if (numHands > 1 && card == 1 && ch == KEY_H) {
+                                    ch = KEY_S;
+                                }
+                                break;
+                            }
+                        case 1:
+                            {
+                                ch = basic->showOptions(player,
+                                    dealer->cards[0].value(), numHands,
+                                    options, numOptions);
+                                break;
+                            }
+                        case 2:
+                            {
+                                ch = strategy->showOptions(player,
+                                    dealer->cards[0].value(), numHands,
+                                    options, numOptions);
+                                break;
+                            }
+                    }
                 }
 
 // Carry out player option.

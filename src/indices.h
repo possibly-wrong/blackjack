@@ -19,9 +19,12 @@ public:
     // IndexStrategy() creates a total-dependent BJStrategy optimized for an
     // "infinite" 1024-deck shoe.  Index plays may be specified via setIndex(),
     // where the true count is computed using the given vector of count tags
-    // (i.e., tags[card] is the tag for card = 1..10).  The given depleted shoe
-    // will be used to compute true counts during evaluation of this strategy.
-    IndexStrategy(BJRules& rules, const double tags[], const BJShoe& shoe);
+    // (i.e., tags[card] is the tag for card = 1..10) and resolution for
+    // estimating number of decks (1=perfect, 26=half-deck, etc.).  The given
+    // depleted shoe will be used to compute true counts during evaluation of
+    // this strategy.
+    IndexStrategy(BJRules& rules, const double tags[], int resolution,
+        const BJShoe& shoe);
 
     // setIndex() modifies this playing strategy to use the index specified by
     // the given hand count (hard or soft) and dealer up card, and whether
@@ -38,6 +41,7 @@ public:
 
 private:
     std::vector<double> tags;
+    const int resolution;
     struct Index {
         double trueCount;
         int play1;

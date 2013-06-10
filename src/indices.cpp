@@ -8,9 +8,10 @@
 #include "indices.h"
 
 IndexStrategy::IndexStrategy(BJRules& rules, const double tags[],
-                             const BJShoe& shoe) :
+                             int resolution, const BJShoe& shoe) :
     BJStrategy(),
     tags(tags, tags + 11),
+    resolution(resolution),
     shoe(shoe) {
 
     // Compute optimal "infinite" deck strategy, so that strategy depends only
@@ -90,12 +91,16 @@ int IndexStrategy::getOption(const BJHand& hand, int upCard, bool doubleDown,
 
 double IndexStrategy::trueCount(const BJHand& hand, int upCard) {
 
-    // Compute true count, accounting for the dealer up card and cards in the
-    // current hand.  This is a slight approximation in the sense that
+    // Compute running count, accounting for the dealer up card and cards in
+    // the current hand.  This is a slight approximation in the sense that
     // post-split hands will not correctly account for all cards seen.
     double rc = tags[upCard];
     for (int card = 1; card <= 10; ++card) {
         rc += tags[card] * (hand.getCards(card) - shoe.getCards(card));
     }
-    return rc * 52 / (shoe.getCards() - hand.getCards() - 1);
+
+    // Divide by number of decks remaining, rounding to the given resolution.
+    int numCards = shoe.getCards() - hand.getCards() - 1;
+    int numGroups = (numCards + resolution / 2) / resolution;
+    return rc / numGroups * 52 / resolution;
 }

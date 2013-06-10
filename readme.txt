@@ -1,4 +1,4 @@
-Blackjack version 7.1
+Blackjack version 7.2
 Copyright (C) 2013 Eric Farmer (erfarmer@gmail.com)
 
 Blackjack game written using the Allegro Game Programming Library
@@ -202,6 +202,9 @@ round, in fraction of initial wager.
 ************************************************************************
 
 *** Revision History ***
+
+7.2  The card counting analyzer now supports configurable resolution for
+     estimating number of decks when computing the true count.
 
 7.1  The card counting analyzer now supports total-dependent strategy
      with true count-dependent index plays.

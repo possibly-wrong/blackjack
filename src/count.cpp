@@ -215,7 +215,7 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Card Counting Analyzer version 7.1\n");
+    printf("Blackjack Card Counting Analyzer version 7.2\n");
     printf("Copyright (C) 2013 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
@@ -292,19 +292,22 @@ int main() {
     int numIndices;
     scanf("%d", &numIndices);
     double tags[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    int resolution = 1;
     if (numIndices > 0) {
         printf("  ==========================================\n");
         printf("  Enter count tags (1-10): ");
         for (int card = 1; card <= 10; card++) {
             scanf("%lf", &tags[card]);
         }
+        printf("  Enter deck resolution (1=perfect, 26=half-deck, etc.): ");
+        scanf("%d", &resolution);
     }
     rules = new BJRules(hitSoft17, doubleAnyTotal, double9,
             doubleSoft, doubleAfterHit, doubleAfterSplit, resplit, resplitAces,
             lateSurrender, bjPayoff);
     distribution = new BJShoe(numDecks);
     BJShoe indexShoe(numDecks);
-    IndexStrategy indices(*rules, tags, indexShoe);
+    IndexStrategy indices(*rules, tags, resolution, indexShoe);
     if (numIndices > 0) {
         printf("\n               cnt up  dbl spl sur  tc p1 p2\n");
         for (int idx = 0; idx < numIndices; ++idx) {

@@ -1,4 +1,4 @@
-Blackjack version 7.2
+Blackjack version 7.3
 Copyright (C) 2013 Eric Farmer (erfarmer@gmail.com)
 
 Blackjack game written using the Allegro Game Programming Library
@@ -154,17 +154,26 @@ Calculator (see above).
 
 In addition to the rule variations available in the game, you may
 specify indices for total-dependent strategy variations based on the
-true count.  Each index is specified by 8 values:
+true count.  Each strategy variation is specified beginning with 5
+values indicating the player hand:
 
 1. Count = hand total, with negative total indicating a soft hand.
 2. Dealer up card (1-10).
 3. Double down = 1 if doubling down is allowed on the hand, 0 otherwise.
 4. Split = 1 if splitting is allowed on the hand, 0 otherwise.
 5. Surrender = 1 if late surrender is allowed on the hand, 0 otherwise.
-6. True count = threshold true count (see 7 and 8 below).
-7. Play1 = strategy when true count is below threshold:
-           1=stand, 2=hit, 3=double, 4=split, 5=surrender
-8. Play2 = strategy when true count is at least threshold.
+
+These are followed by a series of strategy/true count index pairs, with
+the strategy values being (1=stand, 2=hit, 3=double, 4=split,
+5=surrender), and the indices being strictly increasing with the final
+index being +1000 or greater (effectively infinite), indicating a
+partition of possible true counts into half-open intervals and
+corresponding playing strategies.  For example:
+
++16 10 2 0 1 +1000
+
+represents the strategy for hard 16 vs. dealer 10 of hitting (2) if the
+true count is less than 0, and standing (1) otherwise.
 
 You may also specify the playing strategy to use during simulated play:
 
@@ -202,6 +211,9 @@ round, in fraction of initial wager.
 ************************************************************************
 
 *** Revision History ***
+
+7.3  The card counting analyzer now supports multiple (i.e., more than
+     2) indices/strategies for each player hand.
 
 7.2  The card counting analyzer now supports configurable resolution for
      estimating number of decks when computing the true count.

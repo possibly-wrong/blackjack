@@ -7,10 +7,10 @@
 
 #include "indices.h"
 
-IndexStrategy::IndexStrategy(BJRules& rules, const double tags[],
+IndexStrategy::IndexStrategy(BJRules& rules, const std::vector<double>& tags,
                              int resolution, const BJShoe& shoe) :
     BJStrategy(),
-    tags(tags, tags + 11),
+    tags(tags),
     resolution(resolution),
     shoe(shoe) {
 
@@ -20,6 +20,10 @@ IndexStrategy::IndexStrategy(BJRules& rules, const double tags[],
     BJStrategy strategy;
     BJProgress progress;
     BJPlayer *tdz = new BJPlayer(infiniteDeck, rules, strategy, progress);
+
+    // There are no indices for the default strategy.
+    std::vector<double> indices(1, std::numeric_limits<double>::infinity());
+    std::vector<int> plays(1);
 
     // "Copy" TDZ strategy into indices[] array, using a representative 2-card
     // hand for each hard/soft hand total.
@@ -35,10 +39,10 @@ IndexStrategy::IndexStrategy(BJRules& rules, const double tags[],
                 BJHand hand;
                 hand.deal(count / 2);
                 hand.deal(count - count / 2);
-                int play = tdz->getOption(hand, upCard,
+                plays[0] = tdz->getOption(hand, upCard,
                     doubleDown != 0, split != 0, surrender != 0);
-                setIndex(count, false, upCard, doubleDown != 0,
-                    split != 0, surrender != 0, 0, play, play);
+                setOption(count, false, upCard, doubleDown != 0,
+                    split != 0, surrender != 0, indices, plays);
             }
         }
 
@@ -49,10 +53,10 @@ IndexStrategy::IndexStrategy(BJRules& rules, const double tags[],
             hand.deal(9);
             hand.deal(2);
             if (rules.getDoubleDown(hand) || doubleDown == 0) {
-                int play = tdz->getOption(hand, upCard,
+                plays[0] = tdz->getOption(hand, upCard,
                     doubleDown != 0, false, false);
-                setIndex(21, false, upCard,
-                    doubleDown != 0, false, false, 0, play, play);
+                setOption(21, false, upCard,
+                    doubleDown != 0, false, false, indices, plays);
             }
         }
 
@@ -62,31 +66,38 @@ IndexStrategy::IndexStrategy(BJRules& rules, const double tags[],
                 BJHand hand;
                 hand.deal(1);
                 hand.deal(count - 11);
-                int play = tdz->getOption(hand, upCard,
+                plays[0] = tdz->getOption(hand, upCard,
                     doubleDown != 0, split != 0, surrender != 0);
-                setIndex(count, true, upCard, doubleDown != 0,
-                    split != 0, surrender != 0, 0, play, play);
+                setOption(count, true, upCard, doubleDown != 0,
+                    split != 0, surrender != 0, indices, plays);
             }
         }
     }
     delete tdz;
 }
 
-void IndexStrategy::setIndex(int count, bool soft, int upCard,
+void IndexStrategy::setOption(int count, bool soft, int upCard,
     bool doubleDown, bool split, bool surrender,
-    double trueCount, int play1, int play2) {
-    Index& index = indices[count][soft][upCard][doubleDown][split][surrender];
-    index.trueCount = trueCount;
-    index.play1 = play1;
-    index.play2 = play2;
+    const std::vector<double>& indices, const std::vector<int>& plays) {
+    Strategy& strategy =
+        strategies[count][soft][upCard][doubleDown][split][surrender];
+    strategy.indices = indices;
+    strategy.plays = plays;
 }
 
 int IndexStrategy::getOption(const BJHand& hand, int upCard, bool doubleDown,
     bool split, bool surrender) {
-    Index& index = indices[hand.getCount()][hand.getSoft()][upCard]
+    Strategy& strategy = strategies[hand.getCount()][hand.getSoft()][upCard]
         [doubleDown][split][surrender];
-    return (trueCount(hand, upCard) < index.trueCount ?
-        index.play1 : index.play2);
+    double tc = trueCount(hand, upCard);
+
+    // Return the strategy corresponding to the interval containing the true
+    // count.
+    for (int i = 0;; ++i) {
+        if (tc < strategy.indices[i]) {
+            return strategy.plays[i];
+        }
+    }
 }
 
 double IndexStrategy::trueCount(const BJHand& hand, int upCard) {

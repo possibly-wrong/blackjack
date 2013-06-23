@@ -179,7 +179,7 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Basic Strategy Calculator version 7.2\n");
+    printf("Blackjack Basic Strategy Calculator version 7.3\n");
     printf("Copyright (C) 2013 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");

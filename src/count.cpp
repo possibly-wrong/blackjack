@@ -215,7 +215,7 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Card Counting Analyzer version 7.2\n");
+    printf("Blackjack Card Counting Analyzer version 7.3\n");
     printf("Copyright (C) 2013 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
@@ -288,13 +288,13 @@ int main() {
 
 // Get TDI strategy count tags and indices.
 
-    printf("\nEnter number of TDI indices: ");
-    int numIndices;
-    scanf("%d", &numIndices);
-    double tags[11] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    printf("\nEnter number of TDI strategy changes: ");
+    int numChanges;
+    scanf("%d", &numChanges);
+    std::vector<double> tags(11);
     int resolution = 1;
-    if (numIndices > 0) {
-        printf("  ==========================================\n");
+    if (numChanges > 0) {
+        printf("  ================================================\n");
         printf("  Enter count tags (1-10): ");
         for (int card = 1; card <= 10; card++) {
             scanf("%lf", &tags[card]);
@@ -307,19 +307,29 @@ int main() {
             lateSurrender, bjPayoff);
     distribution = new BJShoe(numDecks);
     BJShoe indexShoe(numDecks);
-    IndexStrategy indices(*rules, tags, resolution, indexShoe);
-    if (numIndices > 0) {
-        printf("\n               cnt up  dbl spl sur  tc p1 p2\n");
-        for (int idx = 0; idx < numIndices; ++idx) {
-            printf("  Enter index: ");
-            int count, card, doubleDown, split, surrender, play1, play2;
-            double trueCount;
-            scanf("%d%d%d%d%d%lf%d%d", &count, &card, &doubleDown, &split,
-                &surrender, &trueCount, &play1, &play2);
+    IndexStrategy indexStrategy(*rules, tags, resolution, indexShoe);
+    if (numChanges > 0) {
+        printf("\n              cnt up  dbl spl sur p1 tc1 p2 ... +1000\n");
+        for (int idx = 0; idx < numChanges; ++idx) {
+            printf("  Enter play: ");
+            int count, card, doubleDown, split, surrender, play;
+            scanf("%d%d%d%d%d%d", &count, &card, &doubleDown, &split,
+                &surrender, &play);
             bool soft = (count < 0);
-            indices.setIndex(soft ? -count : count, soft, card,
+            std::vector<double> indices;
+            std::vector<int> plays(1, play);
+            double tc = 0;
+            while (tc < 1000) {
+                scanf("%lf", &tc);
+                indices.push_back(tc);
+                if (tc < 1000) {
+                    scanf("%d", &play);
+                    plays.push_back(play);
+                }
+            }
+            indexStrategy.setOption(soft ? -count : count, soft, card,
                 doubleDown != 0, split != 0, surrender != 0,
-                trueCount, play1, play2);
+                indices, plays);
         }
     }
 
@@ -410,7 +420,7 @@ int main() {
         for (int card = 1; card <= 10; card++)
             fprintf(file, "%d ", distribution->getCards(card));
         indexShoe = *distribution;
-        strategy->reset(*distribution, *rules, indices, progress);
+        strategy->reset(*distribution, *rules, indexStrategy, progress);
         fprintf(file, "%.17lf ", strategy->getValue());
         strategy->reset(*distribution, *rules, *basic, progress);
         fprintf(file, "%.17lf ", strategy->getValue());
@@ -485,7 +495,7 @@ int main() {
                                         && numHands < rules->getResplit(card));
                                 bool surrender = (rules->getLateSurrender() && player->getCards() == 2
                                         && numHands == 1);
-                                ch = indices.getOption(*player,
+                                ch = indexStrategy.getOption(*player,
                                     dealer->cards[0].value(),
                                     doubleDown, split, surrender) - 1;
                                 if (numHands > 1 && card == 1 && ch == KEY_H) {

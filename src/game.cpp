@@ -518,7 +518,7 @@ int main() {
 
     // Display title and license notice.
     clear(screen);
-    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 7.3");
+    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 7.4");
     textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2013 Eric Farmer");
     textprintf_centre(screen, font, 400, 124, WHITE, "Written using the Allegro Game Programming Library");
     textprintf_centre(screen, font, 400, 132, WHITE, "Original card images Copyright 2011 Chris Aguilar");
@@ -533,6 +533,7 @@ int main() {
     set_config_file(filename);
 
     int numDecks;
+    int penetration;
     bool hitSoft17,
         doubleAnyTotal,
         double9,
@@ -545,6 +546,7 @@ int main() {
     double bjPayoff;
 
     numDecks = get_config_int(NULL, "Number_Of_Decks", 6);
+    penetration = get_config_int(NULL, "Penetration", 52);
     hitSoft17 = (get_config_int(NULL, "Dealer_Hits_Soft_17", 0) != 0);
     doubleAnyTotal = (get_config_int(NULL, "Double_Down_Any_Total", 1) != 0);
     double9 = (get_config_int(NULL, "Double_Down_9", 1) != 0);
@@ -629,7 +631,7 @@ int main() {
         dealerProbabilities->reset();
 
         // Reshuffle if necessary.
-        if (shoe->numCards < 52 || practice > 0) {
+        if (shoe->numCards < penetration || practice > 0) {
             shoe->shuffle(practice);
             distribution->reset();
         }

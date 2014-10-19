@@ -1,4 +1,4 @@
-Blackjack version 7.3
+Blackjack version 7.4
 Copyright (C) 2013 Eric Farmer (erfarmer@gmail.com)
 
 Blackjack game written using the Allegro Game Programming Library
@@ -211,6 +211,8 @@ round, in fraction of initial wager.
 ************************************************************************
 
 *** Revision History ***
+
+7.4  The game now supports customizable penetration.
 
 7.3  The card counting analyzer now supports multiple (i.e., more than
      2) indices/strategies for each player hand.

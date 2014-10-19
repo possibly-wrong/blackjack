@@ -12,6 +12,14 @@ Number_Of_Decks = 6
 
 ###########################################################
 #
+#  Penetration: reshuffle when fewer than the given number
+#  of cards remain in the shoe.
+#
+
+Penetration = 52
+
+###########################################################
+#
 #  1 : Dealer hits soft 17.
 #  0 : Dealer stands on soft 17.
 #

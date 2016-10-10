@@ -9,9 +9,61 @@
 
 namespace // unnamed namespace
 {
+    struct Hand : public BJHand
+    {
+        Hand() : BJHand(), wager(1), up_card(0) {}
+
+        double wager;
+        int up_card;
+
+        friend bool operator< (const Hand& a, const Hand& b)
+        {
+            if (a.wager != b.wager)
+            {
+                return a.wager < b.wager;
+            }
+            int card = 1;
+            for (; card < 10 && a.cards[card] == b.cards[card]; ++card);
+            return (a.cards[card] < b.cards[card]);
+        }
+    };
+
     struct Shoe : public BJShoe
     {
         Shoe(const BJShoe& shoe) : BJShoe(shoe) {}
+
+        // Return true iff this shoe contains at least the given up card and
+        // the cards in the given two split hands.
+        bool is_valid(int up_card, const Hand& h1, const Hand& h2)
+        {
+            for (int card = 1; card <= 10; ++card)
+            {
+                if (cards[card] < ((card == up_card) ? 1 : 0) +
+                    h1.getCards(card) + h2.getCards(card))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        // Remove the given cards from this shoe, returning the corresponding
+        // probability of dealing the cards.
+        double deal_split(int up_card, const Hand& h1, const Hand& h2)
+        {
+            double probability = getProbability(up_card);
+            deal(up_card);
+            for (int card = 1; card <= 10; ++card)
+            {
+                int num_cards = h1.getCards(card) + h2.getCards(card);
+                for (int i = 0; i < num_cards; ++i)
+                {
+                    probability *= getProbability(card);
+                    deal(card);
+                }
+            }
+            return probability;
+        }
 
         friend bool operator< (const Shoe& a, const Shoe& b)
         {
@@ -72,14 +124,6 @@ namespace // unnamed namespace
         }
     };
 
-    struct Hand : public BJHand
-    {
-        Hand() : BJHand(), wager(1), up_card(0) {}
-
-        double wager;
-        int up_card;
-    };
-
     struct Kahan
     {
         Kahan() : sum(0), correction(0) {}
@@ -106,7 +150,8 @@ namespace // unnamed namespace
             blackjack_payoff(rules.getBlackjackPayoff()),
             strategy(strategy),
             dealer_caches(),
-            pdf()
+            pdf(),
+            split_hands()
         {
             // empty
         }
@@ -119,6 +164,7 @@ namespace // unnamed namespace
         BJStrategy& strategy;
         std::map<Shoe, Dealer> dealer_caches[11];
         std::map<double, Kahan> pdf;
+        std::map<Hand, int> split_hands[11][11];
     };
 
     struct Round
@@ -243,9 +289,15 @@ namespace // unnamed namespace
 
         void resolve()
         {
-            if (current++ < num_hands)
+            if (current < num_hands)
             {
-                play();
+                // We could brute-force all possible ways to resolve all split
+                // hands; instead, just record how many times we reach the
+                // given subset of cards, *and* the corresponding wager.
+
+                //play();
+                context->split_hands[hands[0].up_card][
+                    hands[current].up_card][hands[current]]++;
             }
             else
             {
@@ -281,8 +333,7 @@ namespace // unnamed namespace
                 else
                 {
                     shoe.undeal(up_card);
-                    std::map<Shoe, Dealer>& dealer_cache =
-                        context->dealer_caches[up_card];
+                    auto&& dealer_cache = context->dealer_caches[up_card];
                     if (dealer_cache.find(shoe) == dealer_cache.end())
                     {
                         Dealer dealer;
@@ -337,6 +388,92 @@ std::map<double, double> compute_pdf(
     Context context(shoe, rules, strategy);
     Round round(&context);
     round.deal();
+    for (int up_card = 1; up_card <= 10; ++up_card)
+    {
+        for (int pair_card = 1; pair_card <= 10; ++pair_card)
+        {
+            auto&& split_hands = context.split_hands[up_card][pair_card];
+            for (auto&& h1 : split_hands)
+            {
+                for (auto&& h2 : split_hands)
+                {
+                    if (!(h1 < h2))
+                    {
+                        Shoe this_shoe(shoe);
+                        if (this_shoe.is_valid(up_card, h1.first, h2.first))
+                        {
+                            double probability = this_shoe.deal_split(up_card,
+                                h1.first, h2.first) * h1.second * h2.second;
+                            if (h2 < h1)
+                            {
+                                probability *= 2;
+                            }
+                            double p_bj = 0;
+                            if (up_card == 1)
+                            {
+                                p_bj = this_shoe.getProbability(10);
+                            }
+                            else if (up_card == 10)
+                            {
+                                p_bj = this_shoe.getProbability(1);
+                            }
+                            if (h1.first.getCount() > 21 &&
+                                h2.first.getCount() > 21)
+                            {
+                                context.pdf[-1].add(probability * p_bj);
+                                context.pdf[
+                                    -(h1.first.wager +
+                                    h2.first.wager)].add(
+                                        probability * (1 - p_bj));
+                            }
+                            else
+                            {
+                                this_shoe.undeal(up_card);
+                                auto&& dealer_cache =
+                                    context.dealer_caches[up_card];
+                                if (dealer_cache.find(this_shoe) ==
+                                    dealer_cache.end())
+                                {
+                                    Dealer dealer;
+                                    dealer.compute_probabilities(
+                                        this_shoe, up_card,
+                                        context.hit_soft_17);
+                                    dealer_cache[this_shoe] = dealer;
+                                }
+                                const Dealer& dealer = dealer_cache[this_shoe];
+                                context.pdf[-1].add(probability * p_bj);
+                                for (int dealer_count = 17; dealer_count <= 21;
+                                    ++dealer_count)
+                                {
+                                    double p = probability *
+                                        dealer.pcount[dealer_count - 17];
+                                    double win = 0;
+                                    int c1 = h1.first.getCount();
+                                    win += ((c1 > 21 || c1 < dealer_count) ?
+                                        -h1.first.wager :
+                                        ((c1 == dealer_count) ?
+                                            0 : h1.first.wager));
+                                    int c2 = h2.first.getCount();
+                                    win += ((c2 > 21 || c2 < dealer_count) ?
+                                        -h2.first.wager :
+                                        ((c2 == dealer_count) ?
+                                            0 : h2.first.wager));
+                                    context.pdf[win].add(p);
+                                }
+                                context.pdf[((h1.first.getCount() > 21) ?
+                                    -h1.first.wager : h1.first.wager) +
+                                    ((h2.first.getCount() > 21) ?
+                                        -h2.first.wager : h2.first.wager)].add(
+                                            probability * dealer.p_bust);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Strip Kahan summation wrapper.
     std::map<double, double> pdf;
     for (auto&& q : context.pdf)
     {

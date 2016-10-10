@@ -5,8 +5,9 @@
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "blackjack.h"
+#include "blackjack_pdf.h"
 #include <cstdio>
+#include <cmath>
 using namespace std;
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -284,6 +285,7 @@ int main() {
     BJStrategy strategy(useCDZ, useCDP1);
     Progress progress;
     CDvsTD *player = new CDvsTD(*shoe, rules, strategy, progress);
+    auto pdf = compute_pdf(*shoe, rules, *player);
 
 // Get output filename and prepare to save basic strategy table.
 
@@ -394,7 +396,18 @@ int main() {
                 player->getValue(upCard)*100);
     fprintf(file, "     A  | %14.9lf\n", player->getValue(1)*100);
     fprintf(file, "---------------------------------\n");
-    fprintf(file, "  Total | %14.9lf\n", player->getValue()*100);
+    double ev = player->getValue();
+    fprintf(file, "  Total | %14.9lf", ev*100);
+    if (!resplit && useCDZ)
+    {
+        double variance = 0;
+        for (auto&& q : pdf)
+        {
+            variance += (q.second * pow(q.first - ev, 2));
+        }
+        fprintf(file, " +/- %.9lf", sqrt(variance)*100);
+    }
+    fprintf(file, "\n");
 
 // Display probabilities of outcomes of the dealer's hand.
 
@@ -423,6 +436,16 @@ int main() {
     for (count = 17; count <= 21; count++)
         fprintf(file, " | %.5lf", dealer.getProbabilityCount(count));
     fprintf(file, " | %.5lf\n", dealer.getProbabilityBlackjack());
+
+    if (!resplit && useCDZ)
+    {
+        fprintf(file, "\n\nOutcome | Probability\n");
+        fprintf(file, "---------------------\n");
+        for (auto&& q : pdf)
+        {
+            fprintf(file, "%5.1lf   | %.9lf\n", q.first, q.second);
+        }
+    }
 
 // Display composition-dependent strategy variations.
 

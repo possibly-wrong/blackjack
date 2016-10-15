@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // count.cpp
-// Copyright (C) 2013 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2016 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -215,8 +215,8 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Card Counting Analyzer version 7.4\n");
-    printf("Copyright (C) 2013 Eric Farmer\n");
+    printf("Blackjack Card Counting Analyzer version 7.5\n");
+    printf("Copyright (C) 2016 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
     printf("This is free software, and you are welcome to\n");
@@ -421,11 +421,11 @@ int main() {
             fprintf(file, "%d ", distribution->getCards(card));
         indexShoe = *distribution;
         strategy->reset(*distribution, *rules, indexStrategy, progress);
-        fprintf(file, "%.17lf ", strategy->getValue());
+        fprintf(file, "%.17g ", strategy->getValue());
         strategy->reset(*distribution, *rules, *basic, progress);
-        fprintf(file, "%.17lf ", strategy->getValue());
+        fprintf(file, "%.17g ", strategy->getValue());
         strategy->reset(*distribution, *rules, maxValueStrategy, progress);
-        fprintf(file, "%.17lf ", strategy->getValue());
+        fprintf(file, "%.17g ", strategy->getValue());
 
 // Get player wager.
 

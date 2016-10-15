@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // blackjack.cpp
-// Copyright (C) 2013 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2016 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -407,15 +407,15 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
     computeDoubleDown();
     computeHit(rules, strategy);
 
+    // Blackjack pays 3:2, so correct the value for standing on this hand.  We
+    // do this *before* computing E(split) to ensure consistency of CDZ-
+    // strategy when drawing an ace to split tens.
+    correctStandBlackjack(rules.getBlackjackPayoff());
+
     // Compute expected values for splitting pairs.  Re-link original hands by
     // count for future use.
     computeSplit(rules, strategy);
     linkHandCounts();
-
-    // Blackjack pays 3:2, so correct the value for standing on this hand.  We
-    // wait to do this until after computing E(split) since a blackjack after
-    // splitting a pair only pays even money.
-    correctStandBlackjack(rules.getBlackjackPayoff());
 
     // Compute overall expected values, condition individual hands on no dealer
     // blackjack, and finalize progress indicator.

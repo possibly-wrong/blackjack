@@ -1,5 +1,5 @@
-Blackjack version 7.4
-Copyright (C) 2013 Eric Farmer (erfarmer@gmail.com)
+Blackjack version 7.5
+Copyright (C) 2016 Eric Farmer (erfarmer@gmail.com)
 
 Blackjack game written using the Allegro Game Programming Library
 Original card images Copyright 2011 Chris Aguilar
@@ -115,13 +115,18 @@ Once basic strategy for the selected rule variations has been computed,
 enter the name of a file in which to save the basic strategy table.
 This will be a text file, so a '.txt' extension is suggested.  (Tip: the
 basic strategy table prints nicely on three pages when opened in Word,
-with Courier New 10-point font and 0.75-inch left and right margins.)
+with Courier New font and 0.75-inch margins.)
 
 In addition to the table of basic strategy for all possible two-card
 player hands and all possible dealer up cards, the saved file also
 contains the expected values against each dealer up card (and overall),
 as well as the probabilities of each possible outcome of the dealer's
 hand.
+
+When no resplits and CDZ- strategy are selected, it is also feasible to
+compute the probability of each possible outcome of the round.  In this
+case, the standard deviation is also displayed with the overall expected
+value as "mu +/- sigma".
 
 You may then enter individual hands to display the corresponding expected
 values.  Enter the dealer's up card, the number of cards in your hand,
@@ -173,7 +178,8 @@ corresponding playing strategies.  For example:
 +16 10 2 0 1 +1000
 
 represents the strategy for hard 16 vs. dealer 10 of hitting (2) if the
-true count is less than 0, and standing (1) otherwise.
+true count is less than 0, and standing (1) otherwise.  See the indices
+subfolder for more complete examples.
 
 You may also specify the playing strategy to use during simulated play:
 
@@ -204,13 +210,18 @@ round, in fraction of initial wager.
     count.exe      Executable for Count Analyzer
     readme.txt     This file
     gpl.txt        GNU General Public License
-    casinos\       2 casino data files
-    images\        55 card and table bitmaps
-    src\           11 C++ source files
+    casinos/       2 casino data files
+    images/        55 card and table bitmaps
+    indices/       3 example strategy indices
+    src/           15 C++ source files
 
 ************************************************************************
 
 *** Revision History ***
+
+7.5  The compute_pdf() function computes the distribution of outcomes of
+     a round, in the computationally feasible case of no resplits and
+     CDZ- strategy.
 
 7.4  The game now supports customizable penetration.
 

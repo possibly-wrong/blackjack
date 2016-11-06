@@ -285,7 +285,11 @@ int main() {
     BJStrategy strategy(useCDZ, useCDP1);
     Progress progress;
     CDvsTD *player = new CDvsTD(*shoe, rules, strategy, progress);
-    auto pdf = compute_pdf(*shoe, rules, *player);
+    std::map<double, double> pdf;
+    if (!resplit && useCDZ)
+    {
+        pdf = compute_pdf(*shoe, rules, *player);
+    }
 
 // Get output filename and prepare to save basic strategy table.
 

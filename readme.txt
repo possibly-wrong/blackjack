@@ -213,7 +213,7 @@ round, in fraction of initial wager.
     casinos/       2 casino data files
     images/        55 card and table bitmaps
     indices/       3 example strategy indices
-    src/           15 C++ source files
+    src/           16 C++ source files
 
 ************************************************************************
 

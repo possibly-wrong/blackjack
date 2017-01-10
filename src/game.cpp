@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // game.cpp
-// Copyright (C) 2016 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2017 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -518,8 +518,8 @@ int main() {
 
     // Display title and license notice.
     clear(screen);
-    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 7.5");
-    textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2016 Eric Farmer");
+    textprintf_centre(screen, font, 400, 100, WHITE, "Blackjack version 7.6");
+    textprintf_centre(screen, font, 400, 108, WHITE, "Copyright (C) 2017 Eric Farmer");
     textprintf_centre(screen, font, 400, 124, WHITE, "Written using the Allegro Game Programming Library");
     textprintf_centre(screen, font, 400, 132, WHITE, "Original card images Copyright 2011 Chris Aguilar");
     textprintf_centre(screen, font, 400, 148, WHITE, "Blackjack comes with ABSOLUTELY NO WARRANTY. This is");
@@ -631,7 +631,7 @@ int main() {
         dealerProbabilities->reset();
 
         // Reshuffle if necessary.
-        if (shoe->numCards < penetration || practice > 0) {
+        if (shoe->numCards <= penetration || practice > 0) {
             shoe->shuffle(practice);
             distribution->reset();
         }

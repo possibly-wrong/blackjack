@@ -1,5 +1,5 @@
-Blackjack version 7.5
-Copyright (C) 2016 Eric Farmer (erfarmer@gmail.com)
+Blackjack version 7.6
+Copyright (C) 2017 Eric Farmer (erfarmer@gmail.com)
 
 Blackjack game written using the Allegro Game Programming Library
 Original card images Copyright 2011 Chris Aguilar
@@ -175,7 +175,7 @@ index being +1000 or greater (effectively infinite), indicating a
 partition of possible true counts into half-open intervals and
 corresponding playing strategies.  For example:
 
-+16 10 2 0 1 +1000
++16 10 0 0 0 2 0 1 +1000
 
 represents the strategy for hard 16 vs. dealer 10 of hitting (2) if the
 true count is less than 0, and standing (1) otherwise.  See the indices
@@ -212,12 +212,15 @@ round, in fraction of initial wager.
     gpl.txt        GNU General Public License
     casinos/       2 casino data files
     images/        55 card and table bitmaps
-    indices/       3 example strategy indices
+    indices/       4 example strategy indices
     src/           16 C++ source files
 
 ************************************************************************
 
 *** Revision History ***
+
+7.6  The compute_pdf() function (and accompanying count_pdf.cpp) now
+     supports indexed insurance wagers.
 
 7.5  The compute_pdf() function computes the distribution of outcomes of
      a round, in the computationally feasible case of no resplits and

@@ -1,18 +1,20 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // indices.cpp
-// Copyright (C) 2016 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2017 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "indices.h"
 
 IndexStrategy::IndexStrategy(BJRules& rules, const std::vector<double>& tags,
-                             int resolution, const BJShoe& shoe) :
+                             int resolution, const BJShoe& shoe,
+                             double insuranceIndex) :
     BJStrategy(),
     tags(tags),
     resolution(resolution),
-    shoe(shoe) {
+    shoe(shoe),
+    insuranceIndex(insuranceIndex) {
 
     // Compute optimal "infinite" deck strategy, so that strategy depends only
     // on hand total, not composition.
@@ -98,6 +100,10 @@ int IndexStrategy::getOption(const BJHand& hand, int upCard, bool doubleDown,
             return strategy.plays[i];
         }
     }
+}
+
+bool IndexStrategy::insurance(const BJHand& hand) {
+    return (trueCount(hand, 1) >= insuranceIndex);
 }
 
 double IndexStrategy::trueCount(const BJHand& hand, int upCard) {

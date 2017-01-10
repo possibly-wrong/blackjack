@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // count.cpp
-// Copyright (C) 2016 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2017 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -215,8 +215,8 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Card Counting Analyzer version 7.5\n");
-    printf("Copyright (C) 2016 Eric Farmer\n");
+    printf("Blackjack Card Counting Analyzer version 7.6\n");
+    printf("Copyright (C) 2017 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
     printf("This is free software, and you are welcome to\n");
@@ -340,7 +340,7 @@ int main() {
     scanf("%d", &optimalPlay);
 
     int penetration;
-    printf("\nEnter shoe penetration (%%): ");
+    printf("\nEnter shoe penetration (max. cards left): ");
     scanf("%d", &penetration);
 
 // Get random seed and shoe indices to simulate.
@@ -403,7 +403,7 @@ int main() {
 
 // Reshuffle if necessary.
 
-        if (shoe->numCards < (100 - penetration)*52*numDecks/100) {
+        if (shoe->numCards <= penetration) {
             shoe->shuffle();
             distribution->reset();
 

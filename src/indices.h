@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // indices.h
-// Copyright (C) 2016 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2017 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -24,8 +24,11 @@ public:
     // for estimating number of decks (1=perfect, 26=half-deck, etc.).  The
     // given depleted shoe will be used to compute true counts during
     // evaluation of this strategy.
+    //
+    // The insurance index is only used with compute_pdf(), where the default
+    // +1000 (effectively +infinity) specifies no insurance for any hand.
     IndexStrategy(BJRules& rules, const std::vector<double>& tags,
-        int resolution, const BJShoe& shoe);
+        int resolution, const BJShoe& shoe, double insuranceIndex = 1000);
 
     // setOption() modifies this playing strategy to use the indices specified
     // for the given hand count (hard or soft) and dealer up card, and whether
@@ -42,7 +45,16 @@ public:
     virtual int getOption(const BJHand& hand, int upCard, bool doubleDown,
         bool split, bool surrender);
 
-private:
+    // insurance() returns true iff insurance should be taken with the given
+    // player hand (according to the given insurance count tags and index);
+    // this function is only used with compute_pdf().
+    virtual bool insurance(const BJHand& hand);
+
+    // trueCount() returns the true count for the current depleted shoe, and
+    // the given player hand and dealer up card.
+    double trueCount(const BJHand& hand, int upCard);
+
+protected:
     std::vector<double> tags;
     const int resolution;
     struct Strategy {
@@ -50,8 +62,7 @@ private:
         std::vector<int> plays;
     } strategies[22][2][11][2][2][2];
     const BJShoe& shoe;
-
-    double trueCount(const BJHand& hand, int upCard);
+    double insuranceIndex;
 };
 
 #endif // INDICES_H

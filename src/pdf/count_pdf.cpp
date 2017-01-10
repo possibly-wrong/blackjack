@@ -1,12 +1,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // count_pdf.cpp
-// Copyright (C) 2016 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2017 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "blackjack_pdf.h"
-#include "indices.h"
 #include "math_Random.h"
 #include <cstdio>
 #include <cstdlib>
@@ -216,8 +215,8 @@ int main() {
 
 // Display title and license notice.
 
-    printf("Blackjack Card Counting PDF Analyzer version 7.5\n");
-    printf("Copyright (C) 2016 Eric Farmer\n");
+    printf("Blackjack Card Counting PDF Analyzer version 7.6\n");
+    printf("Copyright (C) 2017 Eric Farmer\n");
     printf("\nThanks to London Colin for many improvements and bug fixes.\n");
     printf("\nThis program comes with ABSOLUTELY NO WARRANTY.\n");
     printf("This is free software, and you are welcome to\n");
@@ -270,15 +269,17 @@ int main() {
     scanf("%1s", input);
     doubleAfterSplit = (*input == 'Y' || *input == 'y');
 
-    printf("Enter 'Y' or 'y' if resplitting pairs is allowed: ");
-    scanf("%1s", input);
-    resplit = (*input == 'Y' || *input == 'y');
+    //printf("Enter 'Y' or 'y' if resplitting pairs is allowed: ");
+    //scanf("%1s", input);
+    //resplit = (*input == 'Y' || *input == 'y');
+    //resplitAces = false;
+    //if (resplit) {
+    //    printf("Enter 'Y' or 'y' if resplitting aces is allowed: ");
+    //    scanf("%1s", input);
+    //    resplitAces = (*input == 'Y' || *input == 'y');
+    //}
+    resplit = false;
     resplitAces = false;
-    if (resplit) {
-        printf("Enter 'Y' or 'y' if resplitting aces is allowed: ");
-        scanf("%1s", input);
-        resplitAces = (*input == 'Y' || *input == 'y');
-    }
 
     printf("Enter 'Y' or 'y' if late surrender is allowed: ");
     scanf("%1s", input);
@@ -340,8 +341,19 @@ int main() {
     printf("\nEnter 0=TDI, 1=CDZ-, or 2=optimal playing strategy: ");
     scanf("%d", &optimalPlay);
 
+// Get insurance strategy.
+    printf("Enter insurance count tags (1-10): ");
+    for (int card = 1; card <= 10; card++) {
+        scanf("%lf", &tags[card]);
+    }
+    double insuranceIndex;
+    printf("Enter insurance index: ");
+    scanf("%lf", &insuranceIndex);
+    IndexStrategy insuranceStrategy(*rules, tags, resolution, indexShoe,
+        insuranceIndex);
+
     int penetration;
-    printf("\nEnter shoe penetration (%%): ");
+    printf("\nEnter shoe penetration (max. cards left): ");
     scanf("%d", &penetration);
 
 // Get random seed and shoe indices to simulate.
@@ -404,7 +416,7 @@ int main() {
 
 // Reshuffle if necessary.
 
-        if (shoe->numCards < (100 - penetration)*52*numDecks/100) {
+        if (shoe->numCards <= penetration) {
             shoe->shuffle();
             distribution->reset();
 
@@ -427,28 +439,30 @@ int main() {
         case 0:
         {
             strategy->reset(*distribution, *rules, indexStrategy, progress);
-            pdf = compute_pdf(*distribution, *rules, indexStrategy);
+            pdf = compute_pdf(*distribution, *rules, indexStrategy,
+                insuranceStrategy);
             break;
         }
         case 1:
         {
             strategy->reset(*distribution, *rules, *basic, progress);
-            pdf = compute_pdf(*distribution, *rules, *basic);
+            pdf = compute_pdf(*distribution, *rules, *basic,
+                insuranceStrategy);
             break;
         }
         case 2:
         {
             strategy->reset(*distribution, *rules, maxValueStrategy, progress);
-            pdf = compute_pdf(*distribution, *rules, *strategy);
+            pdf = compute_pdf(*distribution, *rules, *strategy,
+                insuranceStrategy);
             break;
         }
         }
         fprintf(file, "%.17g ", strategy->getValue());
-        for (double w = -4; w <= 4; w += 1)
+        for (double w = -4.5; w <= 4; w += 0.5)
         {
             fprintf(file, "%.17g ", pdf[w]);
         }
-        fprintf(file, "%.17g ", pdf[bjPayoff]);
 
 // Get player wager.
 
@@ -464,10 +478,21 @@ int main() {
         dealer->deal(shoe->deal(), false);
         bool allSettled = false;
 
+// Ask for insurance if the up card is an ace.
+        bool insurance = false;
+        if (dealer->cards[0].value() == 1) {
+            insurance = insuranceStrategy.insurance(*player);
+            if (insurance) {
+                balance -= player->wager / 2;
+            }
+        }
+
 // Check for dealer blackjack.
 
         if (dealer->getCards() == 2 && dealer->getCount() == 21) {
             allSettled = true;
+            if (insurance)
+                balance += player->wager / 2 + (player->wager / 2) * 2;
             if (player->getCards() == 2 && player->getCount() == 21)
                 balance += player->wager;
         }

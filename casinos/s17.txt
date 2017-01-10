@@ -12,7 +12,7 @@ Number_Of_Decks = 6
 
 ###########################################################
 #
-#  Penetration: reshuffle when fewer than the given number
+#  Penetration: reshuffle when at most the given number
 #  of cards remain in the shoe.
 #
 

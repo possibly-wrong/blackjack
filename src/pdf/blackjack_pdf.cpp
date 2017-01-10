@@ -1,7 +1,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 //
 // blackjack_pdf.cpp
-// Copyright (C) 2016 Eric Farmer (see gpl.txt for details)
+// Copyright (C) 2017 Eric Farmer (see gpl.txt for details)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -142,13 +142,15 @@ namespace // unnamed namespace
 
     struct Context
     {
-        Context(const BJShoe& shoe, BJRules& rules, BJStrategy& strategy) :
+        Context(const BJShoe& shoe, BJRules& rules,
+                BJStrategy& strategy, IndexStrategy& insurance) :
             shoe(shoe),
             rules(rules),
             hit_soft_17(rules.getHitSoft17()),
             surrender(rules.getLateSurrender()),
             blackjack_payoff(rules.getBlackjackPayoff()),
             strategy(strategy),
+            insurance(insurance),
             dealer_caches(),
             pdf(),
             split_hands()
@@ -162,6 +164,7 @@ namespace // unnamed namespace
         const bool surrender;
         const double blackjack_payoff;
         BJStrategy& strategy;
+        IndexStrategy& insurance;
         std::map<Shoe, Dealer> dealer_caches[11];
         std::map<double, Kahan> pdf;
         std::map<Hand, int> split_hands[11][11];
@@ -175,7 +178,8 @@ namespace // unnamed namespace
             hands(),
             num_hands(1),
             current(0),
-            probability(1)
+            probability(1),
+            insurance(false)
         {
             // empty
         }
@@ -186,6 +190,7 @@ namespace // unnamed namespace
         int num_hands;
         int current;
         double probability;
+        bool insurance;
 
         void deal()
         {
@@ -224,6 +229,11 @@ namespace // unnamed namespace
             }
             else
             {
+                if (hands[0].up_card == 1 &&
+                    hand.getCards() == 2 && num_hands == 1)
+                {
+                    insurance = context->insurance.insurance(hand);
+                }
                 bool double_down = false;
                 if (num_hands == 1 || hand.up_card != 1)
                 {
@@ -279,8 +289,10 @@ namespace // unnamed namespace
                         {
                             p_bj = shoe.getProbability(1);
                         }
-                        context->pdf[-1].add(probability * p_bj);
-                        context->pdf[-0.5].add(probability * (1 - p_bj));
+                        context->pdf[-1 + (insurance ? 1 : 0)].add(
+                            probability * p_bj);
+                        context->pdf[-0.5 + (insurance ? -0.5 : 0)].add(
+                            probability * (1 - p_bj));
                         break;
                     }
                 }
@@ -327,8 +339,10 @@ namespace // unnamed namespace
                     {
                         win -= hands[i].wager;
                     }
-                    context->pdf[-1].add(probability * p_bj);
-                    context->pdf[win].add(probability * (1 - p_bj));
+                    context->pdf[-1 + (insurance ? 1 : 0)].add(
+                        probability * p_bj);
+                    context->pdf[win + (insurance ? -0.5 : 0)].add(
+                        probability * (1 - p_bj));
                 }
                 else
                 {
@@ -345,13 +359,16 @@ namespace // unnamed namespace
                     if (num_hands == 1 && hands[1].getCards() == 2 &&
                         hands[1].getCount() == 21)
                     {
-                        context->pdf[0].add(probability * p_bj);
-                        context->pdf[context->blackjack_payoff].add(
+                        context->pdf[0 + (insurance ? 1 : 0)].add(
+                            probability * p_bj);
+                        context->pdf[context->blackjack_payoff +
+                            (insurance ? -0.5 : 0)].add(
                             probability * (1 - p_bj));
                     }
                     else
                     {
-                        context->pdf[-1].add(probability * p_bj);
+                        context->pdf[-1 + (insurance ? 1 : 0)].add(
+                            probability * p_bj);
                         for (int dealer_count = 17; dealer_count <= 21;
                             ++dealer_count)
                         {
@@ -366,7 +383,7 @@ namespace // unnamed namespace
                                     ((count == dealer_count) ?
                                         0 : hands[i].wager));
                             }
-                            context->pdf[win].add(p);
+                            context->pdf[win + (insurance ? -0.5 : 0)].add(p);
                         }
                         double win = 0;
                         for (int i = 1; i <= num_hands; ++i)
@@ -374,7 +391,8 @@ namespace // unnamed namespace
                             win += ((hands[i].getCount() > 21) ?
                                 -hands[i].wager : hands[i].wager);
                         }
-                        context->pdf[win].add(probability * dealer.p_bust);
+                        context->pdf[win + (insurance ? -0.5 : 0)].add(
+                            probability * dealer.p_bust);
                     }
                 }
             }
@@ -382,10 +400,10 @@ namespace // unnamed namespace
     };
 } // unnamed namespace
 
-std::map<double, double> compute_pdf(
-    const BJShoe& shoe, BJRules& rules, BJStrategy& strategy)
+std::map<double, double> compute_pdf(const BJShoe& shoe, BJRules& rules,
+    BJStrategy& strategy, IndexStrategy& insurance_strategy)
 {
-    Context context(shoe, rules, strategy);
+    Context context(shoe, rules, strategy, insurance_strategy);
     Round round(&context);
     round.deal();
     for (int up_card = 1; up_card <= 10; ++up_card)
@@ -395,6 +413,14 @@ std::map<double, double> compute_pdf(
             auto&& split_hands = context.split_hands[up_card][pair_card];
             for (auto&& h1 : split_hands)
             {
+                bool insurance = false;
+                if (up_card == 1)
+                {
+                    BJHand pair_hand;
+                    pair_hand.deal(pair_card);
+                    pair_hand.deal(pair_card);
+                    insurance = insurance_strategy.insurance(pair_hand);
+                }
                 for (auto&& h2 : split_hands)
                 {
                     if (!(h1 < h2))
@@ -420,10 +446,12 @@ std::map<double, double> compute_pdf(
                             if (h1.first.getCount() > 21 &&
                                 h2.first.getCount() > 21)
                             {
-                                context.pdf[-1].add(probability * p_bj);
+                                context.pdf[-1 + (insurance ? 1 : 0)].add(
+                                    probability * p_bj);
                                 context.pdf[
                                     -(h1.first.wager +
-                                    h2.first.wager)].add(
+                                    h2.first.wager) +
+                                        (insurance ? -0.5 : 0)].add(
                                         probability * (1 - p_bj));
                             }
                             else
@@ -441,7 +469,8 @@ std::map<double, double> compute_pdf(
                                     dealer_cache[this_shoe] = dealer;
                                 }
                                 const Dealer& dealer = dealer_cache[this_shoe];
-                                context.pdf[-1].add(probability * p_bj);
+                                context.pdf[-1 + (insurance ? 1 : 0)].add(
+                                    probability * p_bj);
                                 for (int dealer_count = 17; dealer_count <= 21;
                                     ++dealer_count)
                                 {
@@ -458,12 +487,14 @@ std::map<double, double> compute_pdf(
                                         -h2.first.wager :
                                         ((c2 == dealer_count) ?
                                             0 : h2.first.wager));
-                                    context.pdf[win].add(p);
+                                    context.pdf[win +
+                                        (insurance ? -0.5 : 0)].add(p);
                                 }
                                 context.pdf[((h1.first.getCount() > 21) ?
                                     -h1.first.wager : h1.first.wager) +
                                     ((h2.first.getCount() > 21) ?
-                                        -h2.first.wager : h2.first.wager)].add(
+                                        -h2.first.wager : h2.first.wager) +
+                                    (insurance ? -0.5 : 0)].add(
                                             probability * dealer.p_bust);
                             }
                         }

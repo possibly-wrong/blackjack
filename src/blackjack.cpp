@@ -106,8 +106,8 @@ int BJShoe::getCards() const {
     return numCards;
 }
 
-double BJShoe::getProbability(int card) const {
-    return (double)cards[card] / numCards;
+BJReal BJShoe::getProbability(int card) const {
+    return BJReal(cards[card]) / numCards;
 }
 
 void BJShoe::reset() {
@@ -178,11 +178,11 @@ void BJDealer::computeProbabilities(const BJShoe & shoe) {
     const int s9 = shoe.cards[9];
     const int s10 = shoe.cards[10];
     const int t = shoe.numCards;
-    double *pcount_17 = probabilityCount[0];
-    double *pcount_18 = probabilityCount[1];
-    double *pcount_19 = probabilityCount[2];
-    double *pcount_20 = probabilityCount[3];
-    double *pcount_21 = probabilityCount[4];
+    BJReal *pcount_17 = probabilityCount[0];
+    BJReal *pcount_18 = probabilityCount[1];
+    BJReal *pcount_19 = probabilityCount[2];
+    BJReal *pcount_20 = probabilityCount[3];
+    BJReal *pcount_21 = probabilityCount[4];
 
     // Initialize accumulated probabilities.
     for (int upCard = 1; upCard <= 10; ++upCard) {
@@ -215,9 +215,9 @@ void BJDealer::computeProbabilities(const BJShoe & shoe) {
 
     // Compute P(blackjack).
     if (s1 && s10) {
-        probabilityBlackjack[1] = (double)s10 / (t - 1);
+        probabilityBlackjack[1] = BJReal(s10) / (t - 1);
         probabilityBust[1] -= probabilityBlackjack[1];
-        probabilityBlackjack[10] = (double)s1 / (t - 1);
+        probabilityBlackjack[10] = BJReal(s1) / (t - 1);
         probabilityBust[10] -= probabilityBlackjack[10];
     } else {
         probabilityBlackjack[1] = probabilityBlackjack[10] = 0;
@@ -229,35 +229,35 @@ void BJDealer::computeProbabilities(const BJShoe & shoe) {
     }
 }
 
-double BJDealer::getProbabilityBust(int upCard) const {
+BJReal BJDealer::getProbabilityBust(int upCard) const {
     return probabilityBust[upCard];
 }
 
-double BJDealer::getProbabilityBust() const {
-    double p = 0;
+BJReal BJDealer::getProbabilityBust() const {
+    BJReal p = 0;
     for (int upCard = 1; upCard <= 10; ++upCard) {
         p += probabilityBust[upCard] * probabilityCard[upCard];
     }
     return p;
 }
 
-double BJDealer::getProbabilityCount(int count, int upCard) const {
+BJReal BJDealer::getProbabilityCount(int count, int upCard) const {
     return probabilityCount[count - 17][upCard];
 }
 
-double BJDealer::getProbabilityCount(int count) const {
-    double p = 0;
+BJReal BJDealer::getProbabilityCount(int count) const {
+    BJReal p = 0;
     for (int upCard = 1; upCard <= 10; ++upCard) {
         p += probabilityCount[count - 17][upCard] * probabilityCard[upCard];
     }
     return p;
 }
 
-double BJDealer::getProbabilityBlackjack(int upCard) const {
+BJReal BJDealer::getProbabilityBlackjack(int upCard) const {
     return probabilityBlackjack[upCard];
 }
 
-double BJDealer::getProbabilityBlackjack() const {
+BJReal BJDealer::getProbabilityBlackjack() const {
     return (probabilityBlackjack[1] * probabilityCard[1] +
             probabilityBlackjack[10] * probabilityCard[10]);
 }
@@ -270,7 +270,7 @@ double BJDealer::getProbabilityBlackjack() const {
 BJRules::BJRules(bool hitSoft17, bool doubleAnyTotal, bool double9,
                  bool doubleSoft, bool doubleAfterHit, bool doubleAfterSplit,
                  bool resplit, bool resplitAces, bool lateSurrender,
-                 double bjPayoff) :
+                 BJReal bjPayoff) :
     hitSoft17(hitSoft17),
     doubleAnyTotal(doubleAnyTotal),
     double9(double9),
@@ -312,7 +312,7 @@ bool BJRules::getLateSurrender() const {
     return lateSurrender;
 }
 
-double BJRules::getBlackjackPayoff() const {
+BJReal BJRules::getBlackjackPayoff() const {
     return bjPayoff;
 }
 
@@ -424,27 +424,27 @@ void BJPlayer::reset(const BJShoe & shoe, BJRules & rules,
     progress.indicate(100);
 }
 
-double BJPlayer::getValueStand(const BJHand & hand, int upCard) const {
+BJReal BJPlayer::getValueStand(const BJHand & hand, int upCard) const {
     return playerHands[findHand(hand)].valueStand[false][upCard];
 }
 
-double BJPlayer::getValueHit(const BJHand & hand, int upCard) const {
+BJReal BJPlayer::getValueHit(const BJHand & hand, int upCard) const {
     return playerHands[findHand(hand)].valueHit[false][upCard];
 }
 
-double BJPlayer::getValueDoubleDown(const BJHand & hand, int upCard) const {
+BJReal BJPlayer::getValueDoubleDown(const BJHand & hand, int upCard) const {
     return playerHands[findHand(hand)].valueDoubleDown[false][upCard];
 }
 
-double BJPlayer::getValueSplit(int pairCard, int upCard) const {
+BJReal BJPlayer::getValueSplit(int pairCard, int upCard) const {
     return valueSplit[pairCard][upCard];
 }
 
-double BJPlayer::getValue(int upCard) const {
+BJReal BJPlayer::getValue(int upCard) const {
     return overallValues[upCard];
 }
 
-double BJPlayer::getValue() const {
+BJReal BJPlayer::getValue() const {
     return overallValue;
 }
 
@@ -460,7 +460,7 @@ int BJPlayer::getOption(const BJHand & hand, int upCard, bool doubleDown,
 
     // Otherwise compute the strategy maximizing expected value.
     PlayerHand & testHand = playerHands[findHand(hand)];
-    double value = testHand.valueStand[false][upCard];
+    BJReal value = testHand.valueStand[false][upCard];
     option = BJ_STAND;
     if (value < testHand.valueHit[false][upCard]) {
         value = testHand.valueHit[false][upCard];
@@ -703,7 +703,7 @@ void BJPlayer::computeDoubleDownCount(int count, bool soft, bool split,
                     if (shoe.cards[card]) {
                         currentHand.deal(card);
                         int j = hand.hitHand[card];
-                        double value;
+                        BJReal value;
                         if (currentHand.count <= 21) {
                             value =
                                 playerHands[j].valueStand[split][upCard] * 2;
@@ -762,7 +762,7 @@ void BJPlayer::computeHitCount(int count, bool soft, BJRules & rules,
                     if (shoe.cards[card]) {
                         currentHand.deal(card);
                         int j = hand.hitHand[card];
-                        double value, testValue;
+                        BJReal value, testValue;
                         if (currentHand.count <= 21) {
                             PlayerHand & hitHand = playerHands[j];
                             bool doubleDown;
@@ -903,18 +903,18 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
             // Evaluate "stopping early," splitting less than the maximum
             // number of hands.
             for (int h = 2; h < maxSplitHands; ++h) {
-                getEVn(q(h, pairCard) * (double)h, h - 2, h - 1, pairCard);
+                getEVn(q(h, pairCard) * BJReal(h), h - 2, h - 1, pairCard);
             }
 
             // Evaluate splitting the maximum number of hands, indexed by the
             // number k of hands completed (i.e., drawing a non-pair card)
             // before drawing additional pair cards to reach the maximum.
             for (int k = 0; k < maxSplitHands - 1; ++k) {
-                std::valarray<double> p = r(maxSplitHands, k, pairCard);
+                std::valarray<BJReal> p = r(maxSplitHands, k, pairCard);
                 if (k > 0) {
-                    getEVn(p * (double)k, maxSplitHands - 2, k - 1, pairCard);
+                    getEVn(p * BJReal(k), maxSplitHands - 2, k - 1, pairCard);
                 }
-                getEVx(p * (double)(maxSplitHands - k), maxSplitHands - 2, k,
+                getEVx(p * BJReal(maxSplitHands - k), maxSplitHands - 2, k,
                     pairCard);
             }
 
@@ -923,9 +923,9 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
                 int holeCard = 11 - upCard;
                 if (shoe.cards[upCard] && shoe.cards[holeCard]) {
                     shoe.deal(upCard);
-                    double pBlackjack = shoe.getProbability(holeCard);
+                    BJReal pBlackjack = shoe.getProbability(holeCard);
                     shoe.deal(holeCard);
-                    double p2, p3, p4,
+                    BJReal p2, p3, p4,
                         n = shoe.numCards,
                         p = shoe.cards[pairCard];
                     if (maxSplitHands > 2) {
@@ -942,7 +942,7 @@ void BJPlayer::computeSplit(BJRules & rules, BJStrategy & strategy) {
                         p2 = 1;
                         p3 = p4 = 0;
                     }
-                    double expectedHands = p2 * 2 + p3 * 3 + p4 * 4;
+                    BJReal expectedHands = p2 * 2 + p3 * 3 + p4 * 4;
                     valueSplit[pairCard][upCard] +=
                         (expectedHands - 1) * pBlackjack;
                     shoe.undeal(holeCard);
@@ -988,7 +988,7 @@ void BJPlayer::computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
                     currentHand.deal(card);
                     PlayerHand & hand =
                         playerHands[playerHands[i].hitHand[card]];
-                    double value, testValue;
+                    BJReal value, testValue;
                     if (pairCard == 1) {
                         value = hand.valueStand[true][upCard];
                     } else {
@@ -1092,18 +1092,18 @@ void BJPlayer::computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
     }
 }
 
-std::valarray<double> BJPlayer::q(int h, int pairCard) {
+std::valarray<BJReal> BJPlayer::q(int h, int pairCard) {
 
     // Compute the probability of splitting exactly h hands.  The number of
     // arrangements of cards is the (h - 1)-st Catalan number; this simpler
     // expression C(h - 1) == h - 1 is only valid for 1 < h < 4.
-    std::valarray<double> v(h - 1.0, 11);
+    std::valarray<BJReal> v(BJReal(h - 1), 11);
     for (int upCard = 1; upCard <= 10; ++upCard) {
         if (shoe.cards[upCard]) {
             shoe.deal(upCard);
 
             // Compute the (constant) probability of each arrangement.
-            double n = shoe.numCards,
+            BJReal n = shoe.numCards,
                 p = shoe.cards[pairCard],
                 np = n - p;
             for (int i = 0; i < h - 2; ++i, --p, --n) {
@@ -1120,7 +1120,7 @@ std::valarray<double> BJPlayer::q(int h, int pairCard) {
     return v;
 }
 
-std::valarray<double> BJPlayer::r(int maxSplitHands, int k, int pairCard) {
+std::valarray<BJReal> BJPlayer::r(int maxSplitHands, int k, int pairCard) {
 
     // Compute the probability of splitting the maximum number of hands,
     // completing k of them (i.e., drawing a non-pair card) before drawing
@@ -1129,17 +1129,17 @@ std::valarray<double> BJPlayer::r(int maxSplitHands, int k, int pairCard) {
     // The number m of arrangements of cards is:
     // (1 - k / (n - 1)) * C(n + k - 2, k); this simpler expression for m is
     // only valid for maxSplitHands <= 4.
-    double m = 1;
+    BJReal m = 1;
     if (maxSplitHands == 4 && k > 0) {
         m = 2;
     }
-    std::valarray<double> v(m, 11);
+    std::valarray<BJReal> v(m, 11);
     for (int upCard = 1; upCard <= 10; ++upCard) {
         if (shoe.cards[upCard]) {
             shoe.deal(upCard);
 
             // Compute the (constant) probability of each arrangement.
-            double n = shoe.numCards,
+            BJReal n = shoe.numCards,
                 p = shoe.cards[pairCard],
                 np = n - p;
             for (int i = 0; i < maxSplitHands - 2; ++i, --p, --n) {
@@ -1156,7 +1156,7 @@ std::valarray<double> BJPlayer::r(int maxSplitHands, int k, int pairCard) {
     return v;
 }
 
-void BJPlayer::getEVx(std::valarray<double> p, int pairRemoved,
+void BJPlayer::getEVx(std::valarray<BJReal> p, int pairRemoved,
                       int nonPairRemoved, int pairCard) {
     if (nonPairRemoved == 0) {
         for (int upCard = 1; upCard <= 10; ++upCard) {
@@ -1168,23 +1168,23 @@ void BJPlayer::getEVx(std::valarray<double> p, int pairRemoved,
 
     // Recursively evaluate EV[X;a,b] in terms of EV[X;a,b-1] and
     // EV[X;a+1,b-1].
-    std::valarray<double> v((double)(shoe.cards[pairCard] - pairRemoved), 11);
+    std::valarray<BJReal> v(BJReal(shoe.cards[pairCard] - pairRemoved), 11);
     v[pairCard] -= 1;
-    v /= shoe.numCards - pairRemoved - nonPairRemoved;
+    v /= BJReal(shoe.numCards - pairRemoved - nonPairRemoved);
     for (int upCard = 1; upCard <= 10; ++upCard) {
         if (v[upCard] >= 1) {
             p[upCard] = v[upCard] = 0;
         }
     }
-    getEVx(p / (1.0 - v), pairRemoved, nonPairRemoved - 1, pairCard);
-    getEVx(p * v / (v - 1.0), pairRemoved + 1, nonPairRemoved - 1, pairCard);
+    getEVx(p / (BJReal(1) - v), pairRemoved, nonPairRemoved - 1, pairCard);
+    getEVx(p * v / (v - BJReal(1)), pairRemoved + 1, nonPairRemoved - 1, pairCard);
 }
 
-void BJPlayer::getEVn(std::valarray<double> p, int pairRemoved,
+void BJPlayer::getEVn(std::valarray<BJReal> p, int pairRemoved,
                       int nonPairRemoved, int pairCard) {
-    std::valarray<double> v((double)(shoe.cards[pairCard] - pairRemoved), 11);
+    std::valarray<BJReal> v(BJReal(shoe.cards[pairCard] - pairRemoved), 11);
     v[pairCard] -= 1;
-    v /= shoe.numCards - 1 - pairRemoved - nonPairRemoved;
+    v /= BJReal(shoe.numCards - 1 - pairRemoved - nonPairRemoved);
     for (int upCard = 1; upCard <= 10; ++upCard) {
         if (v[upCard] >= 1) {
             p[upCard] = v[upCard] = 0;
@@ -1193,7 +1193,7 @@ void BJPlayer::getEVn(std::valarray<double> p, int pairRemoved,
     if (nonPairRemoved == 0) {
 
         // Evaluate EV[N;a,0] in terms of EV[X;a,0] and EV[P;a,0].
-        p /= 1.0 - v;
+        p /= BJReal(1) - v;
         for (int upCard = 1; upCard <= 10; ++upCard) {
             valueSplit[pairCard][upCard] +=
                 p[upCard] * (valueSplitX[pairRemoved][pairCard][upCard] -
@@ -1204,11 +1204,11 @@ void BJPlayer::getEVn(std::valarray<double> p, int pairRemoved,
 
     // Recursively evaluate EV[N;a,b] in terms of EV[N;a,b-1] and
     // EV[N;a+1,b-1].
-    getEVn(p / (1.0 - v), pairRemoved, nonPairRemoved - 1, pairCard);
-    getEVn(p * v / (v - 1.0), pairRemoved + 1, nonPairRemoved - 1, pairCard);
+    getEVn(p / (BJReal(1) - v), pairRemoved, nonPairRemoved - 1, pairCard);
+    getEVn(p * v / (v - BJReal(1)), pairRemoved + 1, nonPairRemoved - 1, pairCard);
 }
 
-void BJPlayer::correctStandBlackjack(double bjPayoff) {
+void BJPlayer::correctStandBlackjack(BJReal bjPayoff) {
     if (shoe.totalCards[1] && shoe.totalCards[10]) {
         currentHand.reset();
         currentHand.deal(1); currentHand.deal(10);
@@ -1247,17 +1247,17 @@ void BJPlayer::computeOverall(BJRules & rules, BJStrategy & strategy) {
                     if (shoe.cards[card1] && shoe.cards[card2] &&
                             (card1 != card2 || shoe.cards[card1] >= 2)) {
                         currentHand.reset();
-                        double p = shoe.getProbability(card1);
+                        BJReal p = shoe.getProbability(card1);
                         shoe.deal(card1); currentHand.deal(card1);
                         p *= shoe.getProbability(card2);
                         shoe.deal(card2); currentHand.deal(card2);
                         PlayerHand & hand = playerHands[findHand(currentHand)];
-                        double value;
+                        BJReal value;
                         BJHand testHand(hand.cards);
                         bool doubleDown = rules.getDoubleDown(testHand),
                             split = (card1 == card2 &&
                                 rules.getResplit(card1) >= 2);
-                        double valueSurrender;
+                        BJReal valueSurrender;
                         switch (strategy.getOption(testHand, upCard,
                                 doubleDown, split, surrender)) {
                         case BJ_MAX_VALUE :
@@ -1313,8 +1313,8 @@ void BJPlayer::computeOverall(BJRules & rules, BJStrategy & strategy) {
     }
 }
 
-double BJPlayer::computeSurrender(int upCard) {
-    double valueSurrender;
+BJReal BJPlayer::computeSurrender(int upCard) {
+    BJReal valueSurrender;
 
     if (upCard == 1) {
         valueSurrender = shoe.getProbability(10);
@@ -1335,7 +1335,7 @@ void BJPlayer::conditionNoBlackjack(BJRules & rules) {
             shoe.reset(currentHand);
             if (shoe.cards[1]) {
                 shoe.deal(1);
-                double p = 1 - shoe.getProbability(10);
+                BJReal p = 1 - shoe.getProbability(10);
                 if (p > 0) {
                     if (currentHand.numCards == 2 && currentHand.count == 21) {
                         hand.valueStand[false][1] /= p;
@@ -1352,7 +1352,7 @@ void BJPlayer::conditionNoBlackjack(BJRules & rules) {
             }
             if (shoe.cards[10]) {
                 shoe.deal(10);
-                double p = 1 - shoe.getProbability(1);
+                BJReal p = 1 - shoe.getProbability(1);
                 if (p > 0) {
                     if (currentHand.numCards == 2 && currentHand.count == 21) {
                         hand.valueStand[false][10] /= p;
@@ -1376,7 +1376,7 @@ void BJPlayer::conditionNoBlackjack(BJRules & rules) {
             shoe.deal(pairCard); shoe.deal(pairCard);
             if (shoe.cards[1]) {
                 shoe.deal(1);
-                double p = 1 - shoe.getProbability(10);
+                BJReal p = 1 - shoe.getProbability(10);
                 if (p > 0) {
                     valueSplit[pairCard][1] =
                             (valueSplit[pairCard][1] + 1 - p) / p;
@@ -1385,7 +1385,7 @@ void BJPlayer::conditionNoBlackjack(BJRules & rules) {
             }
             if (shoe.cards[10]) {
                 shoe.deal(10);
-                double p = 1 - shoe.getProbability(1);
+                BJReal p = 1 - shoe.getProbability(1);
                 if (p > 0) {
                     valueSplit[pairCard][10] =
                             (valueSplit[pairCard][10] + 1 - p) / p;

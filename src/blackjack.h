@@ -10,6 +10,13 @@
 
 #include <valarray>
 
+#ifdef BJ_USE_RATIONAL
+#include "math_Rational.h"
+typedef math::Rational BJReal;
+#else
+typedef double BJReal;
+#endif
+
 // Return values for BJStrategy::getOption() (see below)
 #define BJ_MAX_VALUE    0
 #define BJ_STAND        1
@@ -97,7 +104,7 @@ public:
     // getProbability(card) returns the probability of a card with the given
     // value being dealt next from the shoe, where card is in the range 1 (ace)
     // through 10.
-    double getProbability(int card) const;
+    BJReal getProbability(int card) const;
 
     // reset() returns all dealt cards to the shoe.
     void reset();
@@ -151,35 +158,35 @@ public:
     // getProbabilityBust(upCard) returns the probability (computed by
     // computeProbabilities) of the dealer busting with the given up card,
     // where upCard is in the range 1 (ace) through 10.
-    double getProbabilityBust(int upCard) const;
+    BJReal getProbabilityBust(int upCard) const;
 
     // getProbabilityBust() returns the overall probability (computed by
     // computeProbabilities) of the dealer busting.
-    double getProbabilityBust() const;
+    BJReal getProbabilityBust() const;
 
     // getProbabilityCount(count, upCard) returns the probability (computed by
     // computeProbabilities) of the dealer drawing to the given count, where
     // count is in the range 17 through 21, for the given up card, where upCard
     // is in the range 1 (ace) through 10.
-    double getProbabilityCount(int count, int upCard) const;
+    BJReal getProbabilityCount(int count, int upCard) const;
 
     // getProbabilityCount(count) returns the overall probability (computed by
     // computeProbabilities) of the dealer drawing to the given count, where
     // count is in the range 17 through 21.
-    double getProbabilityCount(int count) const;
+    BJReal getProbabilityCount(int count) const;
 
     // getProbabilityBlackjack(upCard) returns the probability (computed by
     // computeProbabilities) of the dealer having blackjack, for the given up
     // card, where upCard is in the range 1 (ace) through 10.
-    double getProbabilityBlackjack(int upCard) const;
+    BJReal getProbabilityBlackjack(int upCard) const;
 
     // getProbabilityBlackjack() returns the overall probability (computed by
     // computeProbabilities) of the dealer having blackjack.
-    double getProbabilityBlackjack() const;
+    BJReal getProbabilityBlackjack() const;
 
 protected:
     bool hitSoft17;
-    double probabilityBust[11],
+    BJReal probabilityBust[11],
         probabilityCount[5][11],
         probabilityBlackjack[11],
         probabilityCard[11];
@@ -215,7 +222,7 @@ public:
         bool double9 = true, bool doubleSoft = true,
         bool doubleAfterHit = false, bool doubleAfterSplit = true,
         bool resplit = true, bool resplitAces = false,
-        bool lateSurrender = true, double bjPayoff = 1.5);
+        bool lateSurrender = true, BJReal bjPayoff = 1.5);
 
     // ~BJRules() allows appropriate destruction of objects derived from
     // BJRules.
@@ -241,7 +248,7 @@ public:
     virtual bool getLateSurrender() const;
 
     // getBlackjackPayoff() returns the payoff for blackjack.
-    virtual double getBlackjackPayoff() const;
+    virtual BJReal getBlackjackPayoff() const;
 
 protected:
     bool hitSoft17,
@@ -253,7 +260,7 @@ protected:
         resplit,
         resplitAces,
         lateSurrender;
-    double bjPayoff;
+    BJReal bjPayoff;
 };
 
 // The BJStrategy interface allows specification of a possibly sub-optimal
@@ -355,9 +362,9 @@ public:
     // upCard is in the range 1 (ace) through 10.  Results are undefined and
     // may cause an error if the hand is a bust hand or if the hand and up card
     // are not possible in the given shoe.
-    double getValueStand(const BJHand & hand, int upCard) const;
-    double getValueHit(const BJHand & hand, int upCard) const;
-    double getValueDoubleDown(const BJHand & hand, int upCard) const;
+    BJReal getValueStand(const BJHand & hand, int upCard) const;
+    BJReal getValueHit(const BJHand & hand, int upCard) const;
+    BJReal getValueDoubleDown(const BJHand & hand, int upCard) const;
 
     // getValueSplit(pairCard, upCard) returns the expected value (as a
     // fraction of initial wager), conditioned on the dealer not having
@@ -365,17 +372,17 @@ public:
     // given dealer up card, where pairCard and upCard are in the range 1 (ace)
     // through 10.  Results are undefined if the pair hand and up card are not
     // possible in the given shoe.
-    double getValueSplit(int pairCard, int upCard) const;
+    BJReal getValueSplit(int pairCard, int upCard) const;
 
     // getValue(upCard) returns the overall expected value (as a fraction of
     // initial wager) of a player hand against the given dealer up card, where
     // upCard is in the range 1 (ace) through 10.  Results are undefined if the
     // up card is not in the given shoe.
-    double getValue(int upCard) const;
+    BJReal getValue(int upCard) const;
 
     // getValue() returns the overall expected value (as a fraction of initial
     // wager) of a player hand.
-    double getValue() const;
+    BJReal getValue() const;
 
     // getOption() implements the BJStrategy interface, returning the player
     // option which maximizes the expected value of the hand (assuming, if
@@ -392,7 +399,7 @@ protected:
             hitHand[11],
             nextHand,
             option[11];
-        double valueStand[2][11],
+        BJReal valueStand[2][11],
             valueHit[2][11],
             valueDoubleDown[2][11],
 
@@ -403,7 +410,7 @@ protected:
     BJHand currentHand;
     BJShoe shoe;
     int maxPairCards[11];
-    double valueSplitX[5][11][11],
+    BJReal valueSplitX[5][11][11],
         valueSplitP[5][11][11],
         valueSplit[11][11],
         overallValues[11],
@@ -436,16 +443,16 @@ protected:
     void computeSplit(BJRules & rules, BJStrategy & strategy);
     void computeEVx(BJRules & rules, BJStrategy & strategy, int pairCard,
                     int removed);
-    std::valarray<double> q(int h, int pairCard);
-    std::valarray<double> r(int maxSplitHands, int k, int pairCard);
-    void getEVx(std::valarray<double> p, int pairRemoved, int nonPairRemoved,
+    std::valarray<BJReal> q(int h, int pairCard);
+    std::valarray<BJReal> r(int maxSplitHands, int k, int pairCard);
+    void getEVx(std::valarray<BJReal> p, int pairRemoved, int nonPairRemoved,
                 int pairCard);
-    void getEVn(std::valarray<double> p, int pairRemoved, int nonPairRemoved,
+    void getEVn(std::valarray<BJReal> p, int pairRemoved, int nonPairRemoved,
                 int pairCard);
 
-    void correctStandBlackjack(double bjPayoff);
+    void correctStandBlackjack(BJReal bjPayoff);
     void computeOverall(BJRules & rules, BJStrategy & strategy);
-    double computeSurrender(int upCard);
+    BJReal computeSurrender(int upCard);
     void conditionNoBlackjack(BJRules & rules);
 };
 

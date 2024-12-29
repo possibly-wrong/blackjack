@@ -187,7 +187,7 @@ struct Game
         if (s.cards[0] == 2)
         {
             if (DAS && (DOA || hand == 10 || hand == 11 || (D9 && hand == 9))
-                    && pair_half != 11)
+                    && pair_half != -11)
             {
                 hit(moves, s, true);
             }
@@ -217,7 +217,7 @@ struct Game
         if (s.cards[0] == 2)
         {
             if (DAS && (DOA || hand == 10 || hand == 11 || (D9 && hand == 9))
-                && pair_half != 11)
+                && pair_half != -11)
             {
                 value = std::max(value, value_hit(s, true));
             }

@@ -171,7 +171,7 @@ struct Game
     std::vector<State> get_moves(const State& s)
     {
         std::vector<State> moves;
-        std::int8_t hand = s.hands[s.current];
+        std::int8_t hand = s.hands[s.current % 4];
         if (s.current == 4 || hand == 0)
         {
             return moves;

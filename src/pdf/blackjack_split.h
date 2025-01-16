@@ -192,8 +192,7 @@ struct Game
     std::vector<State> get_moves(const State& s)
     {
         std::vector<State> moves;
-        std::int8_t hand = s.hands[s.current];
-        if (s.current == 4 || hand == 0)
+        if (s.current == 4 || s.hands[s.current] == 0)
         {
             return moves;
         }
@@ -207,6 +206,7 @@ struct Game
         }
         if (s.cards[0] == 2)
         {
+            std::int8_t hand = s.hands[s.current];
             if (DAS && (DOA || hand == 10 || hand == 11 || (D9 && hand == 9))
                 && pair_half != -11)
             {

@@ -146,6 +146,11 @@ struct Game
                             " states to depth " << depths.size() << ", " <<
                             num_states * 100 / (HASH_MASK + 1) <<
                             "% capacity...";
+                        if (num_states * 100 / (HASH_MASK + 1) > 98)
+                        {
+                            std::cerr << " out of memory." << std::endl;
+                            return 0;
+                        }
                     }
                 }
             }
@@ -165,10 +170,15 @@ struct Game
     // Work "upward" from states deepest in decision tree, computing expected
     // value either from dealer probabilities for leaf states, or in terms of
     // standing/hitting/etc.
-    void solve(const State& s0)
+    std::size_t solve(const State& s0)
     {
         std::stack<Solved*> depths;
         std::size_t num_states = search(s0, depths);
+        if (num_states == 0)
+        {
+            lookup(s0)->value = std::numeric_limits<double>::quiet_NaN();
+            return 0;
+        }
         std::size_t num_solved = 0;
         for (; !depths.empty(); depths.pop())
         {
@@ -186,6 +196,7 @@ struct Game
             }
         }
         std::cerr << "\r    Solving depth 0, 100% complete.     \n";
+        return num_states;
     }
 
     // Return possible next states from standing/hitting/etc.
@@ -224,8 +235,7 @@ struct Game
     // Return expected value of given state using optimal strategy.
     double get_value(const State& s)
     {
-        std::int8_t hand = s.hands[s.current];
-        if (s.current == 4 || hand == 0)
+        if (s.current == 4 || s.hands[s.current] == 0)
         {
             return value_round(s);
         }
@@ -237,6 +247,7 @@ struct Game
         }
         if (s.cards[0] == 2)
         {
+            std::int8_t hand = s.hands[s.current];
             if (DAS && (DOA || hand == 10 || hand == 11 || (D9 && hand == 9))
                 && pair_half != -11)
             {

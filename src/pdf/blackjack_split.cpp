@@ -56,8 +56,30 @@ int main()
         int up_card = 1;
         std::cerr << "\nDealer up card: ";
         std::cin >> up_card;
+
+        bool count_all = false;
+        std::cerr << "\nOutput count of all states (1=yes, 0=no): ";
+        std::cin >> count_all;
+        bool list_all = false;
+        if (count_all)
+        {
+            std::cerr << "\nOutput list of all states (1=yes, 0=no): ";
+            std::cin >> list_all;
+        }
+
+        bool count_optimal = false;
+        std::cerr << "\nOutput count of optimal states (1=yes, 0=no): ";
+        std::cin >> count_optimal;
+        bool list_optimal = false;
+        if (count_optimal)
+        {
+            std::cerr << "\nOutput list of optimal states (1=yes, 0=no): ";
+            std::cin >> list_optimal;
+        }
+
         std::cerr << "\nSplit " << pair_card << " vs. " << up_card << ":\n";
-        double value = game.value_split(shoe, pair_card, up_card);
+        double value = game.value_split(shoe, pair_card, up_card,
+            count_all, list_all, count_optimal, list_optimal);
         std::cerr << "E(split)= ";
         std::cout << value << std::endl;
         std::cerr << "\n========================================\n";

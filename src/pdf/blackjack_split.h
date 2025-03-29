@@ -33,6 +33,22 @@ struct State
     }
 };
 
+std::ostream& operator<< (std::ostream& os, const State& s)
+{
+    os << "cards=[";
+    for (int c = 0; c < 11; ++c)
+    {
+        os << int(s.cards[c]) << (c < 10 ? ", " : "");
+    }
+    os << "], hands=[";
+    for (int h = 0; h < 4; ++h)
+    {
+        os << int(s.hands[h]) << (h < 3 ? ", " : "");
+    }
+    os << "], current=" << int(s.current);
+    return os;
+}
+
 // Store all possible game states using MSI hash map (ref. Chris Wellons
 // https://nullprogram.com/blog/2022/08/08/) from state to corresponding
 // expected value.
@@ -81,7 +97,8 @@ struct Game
     // with shoe[rank] cards of each rank 1..10 (including initial pair cards
     // and up card).
     double value_split(const std::vector<int>& shoe,
-        int pair_card, int up_card)
+        int pair_card, int up_card,
+        bool count_all, bool list_all, bool count_optimal, bool list_optimal)
     {
         std::clock_t tic = std::clock();
         this->shoe = shoe;
@@ -96,7 +113,155 @@ struct Game
         solve(s0);
         std::cerr << "    Elapsed time " <<
             double(std::clock() - tic) / CLOCKS_PER_SEC << " seconds.\n";
+        if (count_all)
+        {
+            show_states(s0, false, list_all);
+        }
+        if (count_optimal)
+        {
+            show_states(s0, true, list_optimal);
+        }
         return lookup(s0)->value;
+    }
+
+    // Display states (either count or explicit list) reachable using arbitrary
+    // or optimal strategy.
+    void show_states(const State& s0, bool optimal, bool list_states)
+    {
+        std::size_t count = 0;
+        std::set<Solved*> level;
+        level.insert(lookup(s0));
+        while (!level.empty())
+        {
+            std::set<Solved*> next;
+            for (const auto& s_ptr : level)
+            {
+                State s = s_ptr->state;
+                double value = s_ptr->value;
+                ++count;
+                if (list_states)
+                {
+                    std::cout << "\n" << s;
+                }
+                if (s.current == 4 || s.hands[s.current] == 0)
+                {
+                    if (list_states)
+                    {
+                        std::cout << ", E(dealer)=" << value;
+                    }
+                    continue;
+                }
+                if (s.cards[0] >= 2)
+                {
+                    Solved* next_ptr = lookup(stand(s));
+                    if (!optimal)
+                    {
+                        next.insert(next_ptr);
+                    }
+                    if (next_ptr->value == value)
+                    {
+                        if (list_states)
+                        {
+                            std::cout << ", E(stand)=" << value;
+                        }
+                        if (optimal)
+                        {
+                            next.insert(next_ptr);
+                            continue;
+                        }
+                    }
+                }
+                if (s.cards[0] < 2 || pair_half != -11)
+                {
+                    if (!optimal)
+                    {
+                        std::vector<State> moves;
+                        hit(moves, s);
+                        for (const auto& m : moves)
+                        {
+                            next.insert(lookup(m));
+                        }
+                    }
+                    if (value_hit(s) == value)
+                    {
+                        if (list_states)
+                        {
+                            std::cout << ", E(hit)=" << value;
+                        }
+                        if (optimal)
+                        {
+                            std::vector<State> moves;
+                            hit(moves, s);
+                            for (const auto& m : moves)
+                            {
+                                next.insert(lookup(m));
+                            }
+                            continue;
+                        }
+                    }
+                }
+                if (s.cards[0] == 2)
+                {
+                    std::int8_t hand = s.hands[s.current];
+                    if (DAS && (DOA || hand == 10 || hand == 11 || (D9 && hand == 9))
+                        && pair_half != -11)
+                    {
+                        if (!optimal)
+                        {
+                            std::vector<State> moves;
+                            hit(moves, s, true);
+                            for (const auto& m : moves)
+                            {
+                                next.insert(lookup(m));
+                            }
+                        }
+                        if (value_hit(s, true) == value)
+                        {
+                            if (list_states)
+                            {
+                                std::cout << ", E(double)=" << value;
+                            }
+                            if (optimal)
+                            {
+                                std::vector<State> moves;
+                                hit(moves, s, true);
+                                for (const auto& m : moves)
+                                {
+                                    next.insert(lookup(m));
+                                }
+                                continue;
+                            }
+                        }
+                    }
+                    if (hand == pair_hand && s.hands[SPL] == 0 &&
+                        (RSA || pair_half != -11))
+                    {
+                        Solved* next_ptr = lookup(split(s));
+                        if (!optimal)
+                        {
+                            next.insert(next_ptr);
+                        }
+                        if (next_ptr->value == value)
+                        {
+                            if (list_states)
+                            {
+                                std::cout << ", E(split)=" << value;
+                            }
+                            if (optimal)
+                            {
+                                next.insert(next_ptr);
+                                continue;
+                            }
+                        }
+                    }
+                }
+            }
+            level = next;
+        }
+        std::cout << "\n" << count;
+        std::cerr << " states reachable using " <<
+            (optimal ? "optimal" : "arbitrary") << " strategy.\n";
+        std::cout << std::endl;
     }
 
     // Pre-compute list of depleted shoes where dealer may run out of cards.

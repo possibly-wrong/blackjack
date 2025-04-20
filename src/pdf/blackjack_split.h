@@ -68,7 +68,7 @@ struct Game
 {
     // Define rule variations:
     Game(bool enhc, bool h17, bool das, bool doa, bool d9, int spl, bool rsa,
-        int hash_exp) :
+        bool force_resplit, int hash_exp) :
         HASH_EXP{hash_exp}, // allocate 24 * 2^hash_exp bytes for hash map
         HASH_MASK{(1ull << HASH_EXP) - 1},
         hash_map(HASH_MASK + 1),
@@ -79,6 +79,7 @@ struct Game
         D9{d9},     // double down on 9 (only valid if !DOA)
         SPL{spl},   // maximum number of splits
         RSA{rsa},   // resplit aces
+        force_resplit{force_resplit},
         dealer_hit_hands(11),
         shoe{},
         pair_half{0},
@@ -151,6 +152,61 @@ struct Game
                     }
                     continue;
                 }
+                if (s.cards[0] == 2)
+                {
+                    std::int8_t hand = s.hands[s.current];
+                    if (hand == pair_hand && s.hands[SPL] == 0 &&
+                        (RSA || pair_half != -11))
+                    {
+                        Solved* next_ptr = lookup(split(s));
+                        if (!optimal && !force_resplit)
+                        {
+                            next.insert(next_ptr);
+                        }
+                        if (next_ptr->value == value)
+                        {
+                            if (list_states)
+                            {
+                                std::cout << ", E(split)=" << value;
+                            }
+                            if (optimal || force_resplit)
+                            {
+                                next.insert(next_ptr);
+                                continue;
+                            }
+                        }
+                    }
+                    if (DAS && (DOA || hand == 10 || hand == 11 || (D9 && hand == 9))
+                        && pair_half != -11)
+                    {
+                        if (!optimal)
+                        {
+                            std::vector<State> moves;
+                            hit(moves, s, true);
+                            for (const auto& m : moves)
+                            {
+                                next.insert(lookup(m));
+                            }
+                        }
+                        if (value_hit(s, true) == value)
+                        {
+                            if (list_states)
+                            {
+                                std::cout << ", E(double)=" << value;
+                            }
+                            if (optimal)
+                            {
+                                std::vector<State> moves;
+                                hit(moves, s, true);
+                                for (const auto& m : moves)
+                                {
+                                    next.insert(lookup(m));
+                                }
+                                continue;
+                            }
+                        }
+                    }
+                }
                 if (s.cards[0] >= 2)
                 {
                     Solved* next_ptr = lookup(stand(s));
@@ -197,61 +253,6 @@ struct Game
                                 next.insert(lookup(m));
                             }
                             continue;
-                        }
-                    }
-                }
-                if (s.cards[0] == 2)
-                {
-                    std::int8_t hand = s.hands[s.current];
-                    if (DAS && (DOA || hand == 10 || hand == 11 || (D9 && hand == 9))
-                        && pair_half != -11)
-                    {
-                        if (!optimal)
-                        {
-                            std::vector<State> moves;
-                            hit(moves, s, true);
-                            for (const auto& m : moves)
-                            {
-                                next.insert(lookup(m));
-                            }
-                        }
-                        if (value_hit(s, true) == value)
-                        {
-                            if (list_states)
-                            {
-                                std::cout << ", E(double)=" << value;
-                            }
-                            if (optimal)
-                            {
-                                std::vector<State> moves;
-                                hit(moves, s, true);
-                                for (const auto& m : moves)
-                                {
-                                    next.insert(lookup(m));
-                                }
-                                continue;
-                            }
-                        }
-                    }
-                    if (hand == pair_hand && s.hands[SPL] == 0 &&
-                        (RSA || pair_half != -11))
-                    {
-                        Solved* next_ptr = lookup(split(s));
-                        if (!optimal)
-                        {
-                            next.insert(next_ptr);
-                        }
-                        if (next_ptr->value == value)
-                        {
-                            if (list_states)
-                            {
-                                std::cout << ", E(split)=" << value;
-                            }
-                            if (optimal)
-                            {
-                                next.insert(next_ptr);
-                                continue;
-                            }
                         }
                     }
                 }
@@ -391,6 +392,10 @@ struct Game
             if (hand == pair_hand && s.hands[SPL] == 0 &&
                 (RSA || pair_half != -11))
             {
+                if (force_resplit)
+                {
+                    moves.clear();
+                }
                 moves.push_back(split(s));
             }
         }
@@ -421,7 +426,8 @@ struct Game
             if (hand == pair_hand && s.hands[SPL] == 0 &&
                 (RSA || pair_half != -11))
             {
-                value = std::max(value, lookup(split(s))->value);
+                double v_split = lookup(split(s))->value;
+                value = force_resplit ? v_split : std::max(value, v_split);
             }
         }
         return value;
@@ -646,6 +652,7 @@ struct Game
     const bool D9;
     const int SPL;
     const bool RSA;
+    const bool force_resplit;
     std::vector<std::set<std::vector<int> > > dealer_hit_hands;
 
     std::vector<int> shoe;

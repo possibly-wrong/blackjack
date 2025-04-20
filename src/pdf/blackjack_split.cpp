@@ -31,12 +31,15 @@ int main()
     std::cerr << "\nMaximum number of splits (3=SPL3): ";
     std::cin >> spl;
     bool rsa = true;
+    bool force_resplit = false;
     if (spl > 1)
     {
         std::cerr << "\nRe-split aces (1=yes, 0=no): ";
         std::cin >> rsa;
+        std::cerr << "\nForce re-splits (1=yes, 0=no): ";
+        std::cin >> force_resplit;
     }
-    Game game{enhc, h17, das, doa, d9, spl, rsa, hash_exp};
+    Game game{enhc, h17, das, doa, d9, spl, rsa, force_resplit, hash_exp};
     while (true)
     {
         std::cerr << "\nShoe (ace through ten, -1 to exit): ";
